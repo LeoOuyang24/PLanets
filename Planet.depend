@@ -920,7 +920,7 @@
 	"gtc/matrix_transform.hpp"
 	"gtc/type_ptr.hpp"
 
-1675050669 source:c:\users\leoou\onedrive\desktop\projects\planet\main.cpp
+1675471841 source:c:\users\leoou\onedrive\desktop\projects\planet\main.cpp
 	<iostream>
 	<time.h>
 	<SDL.h>
@@ -929,6 +929,7 @@
 	"FreeTypeHelper.h"
 	"planet.h"
 	"player.h"
+	"starSystem.h"
 
 1519933106 c:\users\leoou\onedrive\desktop\sdlstuff\sdl2-2.0.8\x86_64-w64-mingw32\include\sdl2\sdl.h
 	"SDL_main.h"
@@ -1264,19 +1265,32 @@
 	"begin_code.h"
 	"close_code.h"
 
-1675052838 source:c:\users\leoou\onedrive\desktop\projects\planet\planet.cpp
+1675468755 source:c:\users\leoou\onedrive\desktop\projects\planet\planet.cpp
 	<dirent.h>
 	"planet.h"
 
-1675052855 c:\users\leoou\onedrive\desktop\projects\planet\planet.h
+1675468152 c:\users\leoou\onedrive\desktop\projects\planet\planet.h
 	"render.h"
 	"components.h"
 
-1675022332 source:c:\users\leoou\onedrive\desktop\projects\planet\player.cpp
+1675472082 source:c:\users\leoou\onedrive\desktop\projects\planet\player.cpp
 	"SDLhelper.h"
 	"geometry.h"
 	"player.h"
 
-1674547812 c:\users\leoou\onedrive\desktop\projects\planet\player.h
+1675471919 c:\users\leoou\onedrive\desktop\projects\planet\player.h
+	"planet.h"
+	"starSystem.h"
+
+1675052754 source:c:\users\leoou\onedrive\desktop\projects\planet\map.cpp
+	"map.h"
+
+1675052862 c:\users\leoou\onedrive\desktop\projects\planet\map.h
+	"planet.h"
+
+1675468835 source:c:\users\leoou\onedrive\desktop\projects\planet\starsystem.cpp
+	"starSystem.h"
+
+1675468809 c:\users\leoou\onedrive\desktop\projects\planet\starsystem.h
 	"planet.h"
 

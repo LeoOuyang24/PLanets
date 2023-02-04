@@ -130,10 +130,18 @@
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Unit filename="main.cpp" />
+		<Unit filename="map.cpp">
+			<Option target="Release" />
+		</Unit>
+		<Unit filename="map.h">
+			<Option target="Release" />
+		</Unit>
 		<Unit filename="planet.cpp" />
 		<Unit filename="planet.h" />
 		<Unit filename="player.cpp" />
 		<Unit filename="player.h" />
+		<Unit filename="starSystem.cpp" />
+		<Unit filename="starSystem.h" />
 		<Extensions>
 			<lib_finder disable_auto="1" />
 		</Extensions>

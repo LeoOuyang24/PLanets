@@ -8,6 +8,7 @@
 
 #include "planet.h"
 #include "player.h"
+#include "starSystem.h"
 
 int main(int args, char* argsc[])
 {
@@ -25,17 +26,24 @@ int main(int args, char* argsc[])
     glClearColor(0,0,0,0);
     bool eventsEmpty = true;
         //std::cout << tree.count() << std::endl;
+    PlanetSprites.init();
 
-
-    Planet earth = {{500,screenHeight},200};
-    earth.sprite.init("sprites/grassPlanet.png");
+    StarSystem solar;
+    solar.init();
+    //Planet earth = {{500,screenHeight},200};
+    //earth.sprite = 0;//"./planets/grassPlanet.png";
     Player player;
-    player.rect = {earth.center.x,earth.center.y - earth.radius,20,20};
-    player.standingOn = &earth;
+    player.standingOn = solar.getPlanet(0);
+    player.rect = {player.standingOn->center.x,player.standingOn->center.y - player.standingOn->radius,20,20};
+
     Sprite background;
     background.init("sprites/starless_background.png");
     RenderCamera camera;
     camera.init(screenWidth,screenHeight);
+
+    RenderProgram blurProgram;
+    blurProgram.init("../../resources/shaders/vertex/betterShader.h","../../resources/shaders/fragment/blurShader.h",7,{4,1,1,1});
+
     while (!quit)
     {
         while (SDL_PollEvent(&e))
@@ -55,13 +63,16 @@ int main(int args, char* argsc[])
         }
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        earth.render();
-        player.update();
+       // earth.render();
+        player.update(solar);
+        solar.update();
 
         camera.recenter({player.rect.x + player.rect.z/2,player.rect.y + player.rect.a/2});
         //camera.recenter({screenWidth,screenHeight});
         //printRect(camera.getRect());
-        SpriteManager::request(background,ViewPort::basicProgram,{{0,0,screenWidth*5,screenHeight*5},0},0);
+        SpriteManager::request(background,blurProgram,{{0,0,screenWidth*5,screenHeight*5},0},0);
+        float fuelHeight = player.fuel/100.0*100;
+        PolyRender::requestRect(camera.toWorld({10,screenHeight - fuelHeight - 10,30,fuelHeight}),{1,0,0,1},true,0,1);
 
         ViewPort::update(&camera);
         SpriteManager::render();

@@ -2,6 +2,7 @@
 #define PLAYER_H_INCLUDED
 
 #include "planet.h"
+#include "starSystem.h"
 
 
 
@@ -9,12 +10,15 @@ struct Player
 {
     Planet* standingOn = 0;
     bool onGround= true;
+    bool airMoved = false;
+    int fuel = 100;
+    DeltaTime fuelRecharge;
     float speed = 1;
     glm::vec2 forces = glm::vec2(0);
     float baseSpeed = 1;
     glm::vec4 rect;
     float angle;
-    void update();
+    void update(StarSystem& system);
 };
 
 #endif // PLAYER_H_INCLUDED
