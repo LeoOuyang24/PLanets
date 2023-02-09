@@ -3,7 +3,7 @@
 
 #include "player.h"
 
-void Player::update(StarSystem& system)
+void Player::update(StarSystem& system, RenderCamera& camera)
 {
     glm::vec2 center = glm::vec2(rect.x + rect.z/2, rect.y + rect.a/2);
     if (standingOn)
@@ -54,7 +54,7 @@ void Player::update(StarSystem& system)
     {
         forces = 3.f*glm::normalize(forces);
     }
-    PolyRender::requestLine({center,center + 100.0f*forces},glm::vec4(1,0,0,1),1,1,0);
+    PolyRender::requestLine({center,center + 100.0f*forces},glm::vec4(1,0,0,1),1,1);
 
     rect.x += forces.x;
     rect.y += forces.y;
@@ -69,7 +69,7 @@ void Player::update(StarSystem& system)
                               if (FLOAT_COMPARE(pointDistance(center,planet.center),planet.getGravityRadius(),3,<))
                               {
                                   glm::vec2 newForce = (planet.radius/100.0f)/(pow(planet.center.x - center.x,2.0f) + pow(planet.center.y - center.y,2.0f))*(planet.center - center);
-                                  PolyRender::requestLine(glm::vec4(center,center + 10000.0f*newForce),{0,1,(&planet == standingOn),1},1,1,0);
+                                  PolyRender::requestLine(glm::vec4(center,center + 10000.0f*newForce),{0,1,(&planet == standingOn),1},1,1);
                                   forces += newForce;
                               }
 
@@ -82,4 +82,50 @@ void Player::update(StarSystem& system)
         forces *= 0;
     }
     PolyRender::requestRect(rect,{1,0,0,1},true,angle,1);
+    cursorUI.draw(center,camera.toWorld(pairtoVec(MouseManager::getMousePos())));
+}
+
+CursorUI::CursorUI(std::string vertex, std::string fragment) //line,z,non-transluscent color
+{
+    program.init(vertex,fragment);
+    glBindVertexArray(program.VAO);
+
+    glBindVertexArray(0);
+    ViewPort::linkUniformBuffer(program.program);
+}
+
+void CursorUI::draw(const glm::vec2& origin, const glm::vec2& mousePos)
+{
+    glm::vec4 points = glm::vec4(origin,mousePos);
+    std::vector<float> nums;
+    nums.push_back(origin.x);
+    nums.push_back(origin.y);
+
+    /*nums.push_back(mousePos.x);
+    nums.push_back(origin.y);
+
+    nums.push_back(origin.x);
+    nums.push_back(mousePos.y);*/
+
+    nums.push_back(mousePos.x);
+    nums.push_back(mousePos.y);
+
+
+    glBindVertexArray(program.VAO);
+    glBindBuffer(GL_ARRAY_BUFFER,program.VBO);
+    glVertexAttribPointer(0,2,GL_FLOAT,GL_FALSE,0,(void*)0);
+    glEnableVertexAttribArray(0);
+    glBufferData(GL_ARRAY_BUFFER,sizeof(float)*nums.size(),&nums[0],GL_DYNAMIC_DRAW);
+    glUseProgram(program.program);
+
+    glUniform2f(glGetUniformLocation(program.program,"screenDimen"),ViewPort::screenWidth,ViewPort::screenHeight);
+
+    glLineWidth(3.0);
+
+    glDrawArrays(GL_LINES,0,nums.size()/2);
+    glLineWidth(1.0);
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER,0);
+
+    PolyRender::requestCircle({1,0,0,1},mousePos,10,false,1);
 }

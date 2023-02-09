@@ -1,10 +1,19 @@
 #ifndef PLAYER_H_INCLUDED
 #define PLAYER_H_INCLUDED
 
+#include "render.h"
+
 #include "planet.h"
 #include "starSystem.h"
 
 
+class CursorUI
+{
+    BasicRenderPipeline program;
+public:
+    CursorUI(std::string vertex = "../../resources/shaders/vertex/dottedVertex.h", std::string fragment = "../../resources/shaders/fragment/dottedFragment.h");
+    void draw(const glm::vec2& origin, const glm::vec2& mousePos);
+};
 
 struct Player
 {
@@ -18,7 +27,9 @@ struct Player
     float baseSpeed = 1;
     glm::vec4 rect;
     float angle;
-    void update(StarSystem& system);
+    CursorUI cursorUI;
+    void update(StarSystem& system, RenderCamera& camera);
 };
+
 
 #endif // PLAYER_H_INCLUDED

@@ -920,7 +920,7 @@
 	"gtc/matrix_transform.hpp"
 	"gtc/type_ptr.hpp"
 
-1675471841 source:c:\users\leoou\onedrive\desktop\projects\planet\main.cpp
+1675925777 source:c:\users\leoou\onedrive\desktop\projects\planet\main.cpp
 	<iostream>
 	<time.h>
 	<SDL.h>
@@ -1273,12 +1273,13 @@
 	"render.h"
 	"components.h"
 
-1675472082 source:c:\users\leoou\onedrive\desktop\projects\planet\player.cpp
+1675925892 source:c:\users\leoou\onedrive\desktop\projects\planet\player.cpp
 	"SDLhelper.h"
 	"geometry.h"
 	"player.h"
 
-1675471919 c:\users\leoou\onedrive\desktop\projects\planet\player.h
+1675831666 c:\users\leoou\onedrive\desktop\projects\planet\player.h
+	"render.h"
 	"planet.h"
 	"starSystem.h"
 

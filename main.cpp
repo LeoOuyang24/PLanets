@@ -15,10 +15,21 @@ int main(int args, char* argsc[])
     //delete ptr;
     const int screenWidth = 640;
     const int screenHeight = 640;
+
     srand(time(NULL));
+
+    SDL_Init(SDL_INIT_VIDEO);
+
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS,1);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES,16);
+
     GLContext::init(screenWidth,screenHeight);
+
+    glEnable(GL_MULTISAMPLE);
+
     SDL_StopTextInput();
     ViewPort::init(screenWidth,screenHeight);
+
     Font::init(screenWidth, screenHeight);
     PolyRender::init(screenWidth,screenHeight);
     SDL_Event e;
@@ -26,6 +37,7 @@ int main(int args, char* argsc[])
     glClearColor(0,0,0,0);
     bool eventsEmpty = true;
         //std::cout << tree.count() << std::endl;
+
     PlanetSprites.init();
 
     StarSystem solar;
@@ -42,7 +54,9 @@ int main(int args, char* argsc[])
     camera.init(screenWidth,screenHeight);
 
     RenderProgram blurProgram;
-    blurProgram.init("../../resources/shaders/vertex/betterShader.h","../../resources/shaders/fragment/blurShader.h",7,{4,1,1,1});
+    blurProgram.init("../../resources/shaders/vertex/betterShader.h","../../resources/shaders/fragment/blurShader.h",{4,1,1,1});
+
+    SDL_ShowCursor(SDL_DISABLE);
 
     while (!quit)
     {
@@ -64,7 +78,7 @@ int main(int args, char* argsc[])
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
        // earth.render();
-        player.update(solar);
+        player.update(solar,camera);
         solar.update();
 
         camera.recenter({player.rect.x + player.rect.z/2,player.rect.y + player.rect.a/2});
