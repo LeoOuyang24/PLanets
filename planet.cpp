@@ -2,10 +2,13 @@
 
 #include "planet.h"
 
+RenderProgram Planet::outlineProgram;
+
 void Planet::render()
 {
     SpriteManager::request(PlanetSpriteManager::PlanetSprites.getSprite(sprite),ViewPort::basicProgram,{glm::vec4(center - glm::vec2(radius,radius),radius*2,radius*2),1});
-    PolyRender::requestCircle({0,1,1,1},center,getGravityRadius(),false,0);
+    PolyRender::requestCircle({0,1,1,1},center,getGravityRadius(),false,1);
+   //PolyRender::requestNGon(10,center,radius,{1,1,1,1},0,true,1,1);
 }
 
 float Planet::getGravityRadius()

@@ -5,9 +5,11 @@
 #include "render.h"
 #include "components.h"
 
+
 typedef int SpritePath; //index of sprite, -1 for error sprite
 struct Planet
 {
+    static RenderProgram outlineProgram;
     static constexpr int MIN_RADIUS = 10;
     static constexpr int MAX_RADIUS = 500;
     glm::vec2 center = glm::vec2(0);

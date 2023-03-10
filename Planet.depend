@@ -341,11 +341,13 @@
 	"begin_code.h"
 	"close_code.h"
 
-1667708185 c:\users\leoou\onedrive\desktop\resources\render.h
+1678490600 c:\users\leoou\onedrive\desktop\resources\render.h
 	<iostream>
 	<vector>
 	<map>
+	<unordered_map>
 	<list>
+	<set>
 	"glew.h"
 	"glm.hpp"
 	"gtc/matrix_transform.hpp"
@@ -883,12 +885,12 @@
 1525702984 c:\users\leoou\onedrive\desktop\glm\glm\gtc\type_ptr.inl
 	<cstring>
 
-1669003565 c:\users\leoou\onedrive\desktop\resources\sdlhelper.h
+1672723275 c:\users\leoou\onedrive\desktop\resources\sdlhelper.h
 	<list>
 	<unordered_set>
 	"SDL.h"
 
-1653780913 c:\users\leoou\onedrive\desktop\resources\vanilla.h
+1677458979 c:\users\leoou\onedrive\desktop\resources\vanilla.h
 	<iostream>
 	<tuple>
 	<math.h>
@@ -900,10 +902,11 @@
 	<stack>
 	<unordered_map>
 
-1650318077 c:\users\leoou\onedrive\desktop\resources\freetypehelper.h
+1674973740 c:\users\leoou\onedrive\desktop\resources\freetypehelper.h
 	<ft2build.h>
 	<unordered_map>
 	<memory>
+	<list>
 	"geometry.h"
 	"render.h"
 
@@ -912,7 +915,7 @@
 
 1524386496 c:\users\leoou\onedrive\desktop\freetype-2.9.1\include\freetype\config\ftheader.h
 
-1663958277 c:\users\leoou\onedrive\desktop\resources\geometry.h
+1672723275 c:\users\leoou\onedrive\desktop\resources\geometry.h
 	<vector>
 	<map>
 	"glew.h"
@@ -920,7 +923,7 @@
 	"gtc/matrix_transform.hpp"
 	"gtc/type_ptr.hpp"
 
-1675925777 source:c:\users\leoou\onedrive\desktop\projects\planet\main.cpp
+1678266905 source:c:\users\leoou\onedrive\desktop\projects\planet\main.cpp
 	<iostream>
 	<time.h>
 	<SDL.h>
@@ -930,6 +933,7 @@
 	"planet.h"
 	"player.h"
 	"starSystem.h"
+	"shaders.h"
 
 1519933106 c:\users\leoou\onedrive\desktop\sdlstuff\sdl2-2.0.8\x86_64-w64-mingw32\include\sdl2\sdl.h
 	"SDL_main.h"
@@ -1265,20 +1269,20 @@
 	"begin_code.h"
 	"close_code.h"
 
-1675468755 source:c:\users\leoou\onedrive\desktop\projects\planet\planet.cpp
+1678265956 source:c:\users\leoou\onedrive\desktop\projects\planet\planet.cpp
 	<dirent.h>
 	"planet.h"
 
-1675468152 c:\users\leoou\onedrive\desktop\projects\planet\planet.h
+1676233902 c:\users\leoou\onedrive\desktop\projects\planet\planet.h
 	"render.h"
 	"components.h"
 
-1675925892 source:c:\users\leoou\onedrive\desktop\projects\planet\player.cpp
+1678149296 source:c:\users\leoou\onedrive\desktop\projects\planet\player.cpp
 	"SDLhelper.h"
 	"geometry.h"
 	"player.h"
 
-1675831666 c:\users\leoou\onedrive\desktop\projects\planet\player.h
+1675927080 c:\users\leoou\onedrive\desktop\projects\planet\player.h
 	"render.h"
 	"planet.h"
 	"starSystem.h"
@@ -1289,9 +1293,38 @@
 1675052862 c:\users\leoou\onedrive\desktop\projects\planet\map.h
 	"planet.h"
 
-1675468835 source:c:\users\leoou\onedrive\desktop\projects\planet\starsystem.cpp
+1678149031 source:c:\users\leoou\onedrive\desktop\projects\planet\starsystem.cpp
 	"starSystem.h"
 
 1675468809 c:\users\leoou\onedrive\desktop\projects\planet\starsystem.h
 	"planet.h"
+
+1674973741 c:\users\leoou\onedrive\desktop\resources\components.h
+	<memory.h>
+	<unordered_map>
+	<unordered_set>
+	<typeinfo>
+	<list>
+	"glGame.h"
+	"render.h"
+	"SDLhelper.h"
+
+1675492030 c:\users\leoou\onedrive\desktop\resources\glgame.h
+	<glew.h>
+	<glm.hpp>
+	<gtc/matrix_transform.hpp>
+	<gtc/type_ptr.hpp>
+	<vector>
+	<memory>
+	"geometry.h"
+	"render.h"
+	"SDLhelper.h"
+	"FreeTypeHelper.h"
+	<unordered_set>
+
+1678156170 source:c:\users\leoou\onedrive\desktop\projects\planet\shaders.cpp
+	"shaders.h"
+
+1678156170 c:\users\leoou\onedrive\desktop\projects\planet\shaders.h
+	"render.h"
 

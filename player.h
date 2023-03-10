@@ -11,7 +11,7 @@ class CursorUI
 {
     BasicRenderPipeline program;
 public:
-    CursorUI(std::string vertex = "../../resources/shaders/vertex/dottedVertex.h", std::string fragment = "../../resources/shaders/fragment/dottedFragment.h");
+    CursorUI(std::string vertex = "./shaders/dottedVertex.h", std::string fragment = "./shaders/dottedFragment.h");
     void draw(const glm::vec2& origin, const glm::vec2& mousePos);
 };
 

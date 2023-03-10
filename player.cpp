@@ -14,11 +14,34 @@ void Player::update(StarSystem& system, RenderCamera& camera)
         float moveAmount = 0;
         onGround = FLOAT_COMPARE(pointDistance(center,standingOn->center),standingOn->radius,3,<);
 
-        if (KeyManager::isPressed(SDLK_LEFT) || KeyManager::isPressed(SDLK_RIGHT))
+        if (KeyManager::isPressed(SDLK_a) || KeyManager::isPressed(SDLK_d))
         {
             //if (onGround || !airMoved)
             {
-                moveAmount += (1 - KeyManager::isPressed(SDLK_LEFT) * 2 )*speed*(.3*onGround + .7);
+                moveAmount += (1 - KeyManager::isPressed(SDLK_a) * 2 )*speed*(.3*onGround + .7);
+            }
+            if (onGround)
+            {
+                float baseWidth = 10;
+                float baseHeight = 2;
+                int amount= 5;
+                int dimen = 5;
+                for (int i = 0; i < amount;i ++)
+                {
+                    int duration = 1000;
+                    int wait = i*100;
+                    int width = baseWidth + (i%2*2 - 1)*baseWidth/2;
+                    int height = baseHeight + (1 - i%2*2)*baseHeight/2;
+                    int ticks = SDL_GetTicks()%(wait + duration);
+                    if (ticks < duration)
+                    {
+                        float y = pow(ticks-duration/4,2)/(float)(pow(duration/2,2))*baseHeight;
+                        glm::vec2 origin = glm::vec2(rect.x + rect.z/(amount)*i,rect.y + rect.a - (dimen));
+                        glm::vec2 point = rotatePoint({origin.x + (i%2*2 - 1)*ticks/(float)duration*width,origin.y  + y},center,angle-M_PI/2);
+                        PolyRender::requestRect(glm::vec4(point,dimen,dimen),glm::vec4(0,1,0,1),true,0,2);
+                    }
+                }
+
             }
             //airMoved = true;
         }
@@ -40,9 +63,10 @@ void Player::update(StarSystem& system, RenderCamera& camera)
 
         standingOn = FLOAT_COMPARE(glm::distance(center,standingOn->center),standingOn->getGravityRadius(),3,<) ? standingOn : 0;
     }
+    glm::vec2 mousePos = camera.toWorld(pairtoVec(MouseManager::getMousePos()));
     if (KeyManager::isPressed(SDLK_LSHIFT) && fuel)
     {
-        forces *= 1.1f;
+        forces += .1f*glm::normalize(mousePos - center);
         fuel = std::max(0,fuel - 5);
         fuelRecharge.set();
     }
@@ -82,7 +106,7 @@ void Player::update(StarSystem& system, RenderCamera& camera)
         forces *= 0;
     }
     PolyRender::requestRect(rect,{1,0,0,1},true,angle,1);
-    cursorUI.draw(center,camera.toWorld(pairtoVec(MouseManager::getMousePos())));
+    cursorUI.draw(center,mousePos);
 }
 
 CursorUI::CursorUI(std::string vertex, std::string fragment) //line,z,non-transluscent color
