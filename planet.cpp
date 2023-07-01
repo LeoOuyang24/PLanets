@@ -4,19 +4,32 @@
 
 RenderProgram Planet::outlineProgram;
 
+glm::vec2 Planet::getPlanetSurfacePoint(float tilt, const glm::vec2& point)
+{
+    return center + std::max(glm::distance(point,center),radius)*glm::vec2(cos(tilt),sin(tilt));
+}
+
+glm::vec2 Planet::getPlanetSurfacePoint(float tilt, const glm::vec4& rect)
+{
+    glm::vec2 point = glm::vec2(rect.x + rect.z/2, rect.y + rect.a/2);
+    return center + std::max(glm::distance(point,center),radius + rect.a/4)*glm::vec2(cos(tilt),sin(tilt));
+}
+
 void Planet::render()
 {
-    SpriteManager::request(PlanetSpriteManager::PlanetSprites.getSprite(sprite),ViewPort::basicProgram,{glm::vec4(center - glm::vec2(radius,radius),radius*2,radius*2),1});
-    PolyRender::requestCircle({0,1,1,1},center,getGravityRadius(),false,1);
+    SpriteManager::request(PlanetSpriteManager::PlanetSprites.getSprite(sprite),ViewPort::basicProgram,{glm::vec4(center - glm::vec2(radius,radius),radius*2,radius*2),0});
+    PlanetSpriteManager::GravityFieldRender.draw(GL_TRIANGLES,center,getGravityRadius());
+    PolyRender::requestCircle({0,1,1,1},center,getGravityRadius(),false,0);
    //PolyRender::requestNGon(10,center,radius,{1,1,1,1},0,true,1,1);
 }
 
 float Planet::getGravityRadius()
 {
-    return radius*1.5f;
+    return radius*1.8f;
 }
 
 PlanetSpriteManager PlanetSpriteManager::PlanetSprites;
+BasicRenderPipeline PlanetSpriteManager::GravityFieldRender;
 
 const std::string PlanetSpriteManager::SpritesDirectory = "./planets/";
 const std::string PlanetSpriteManager::ErrorMSG = "./sprites/errorMSG.png";
@@ -38,6 +51,8 @@ void PlanetSpriteManager::init()
             }
     }
     errorMessage.load(ErrorMSG);
+
+    GravityFieldRender.init("./shaders/gravityVertexShader.h","./shaders/gravityFragmentShader.h",{2,1});
 }
 
 Sprite& PlanetSpriteManager::getSprite(SpritePath src)
@@ -71,6 +86,6 @@ SpritePath PlanetSpriteManager::assignSpritePath()
     }
     else
     {
-        return rand()%sprites.size();
+        return 0;//rand()%sprites.size();
     }
 }

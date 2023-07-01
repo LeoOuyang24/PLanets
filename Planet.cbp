@@ -132,6 +132,16 @@
 		<Unit filename="../../resources/vanilla.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
+		<Unit filename="AI.cpp" />
+		<Unit filename="AI.h" />
+		<Unit filename="critter.cpp" />
+		<Unit filename="critter.h" />
+		<Unit filename="entity.cpp">
+			<Option target="Debug" />
+		</Unit>
+		<Unit filename="entity.h" />
+		<Unit filename="follower.cpp" />
+		<Unit filename="follower.h" />
 		<Unit filename="main.cpp" />
 		<Unit filename="map.h">
 			<Option target="Release" />

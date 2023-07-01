@@ -10,6 +10,10 @@
 #include "player.h"
 #include "starSystem.h"
 #include "shaders.h"
+#include "follower.h"
+#include "critter.h"
+#include "AI.h"
+#include "game.h"
 
 int main(int args, char* argsc[])
 {
@@ -45,18 +49,44 @@ int main(int args, char* argsc[])
 
     PlanetSprites.init();
 
-    StarSystem solar;
-    solar.init();
+
     //Planet earth = {{500,screenHeight},200};
     //earth.sprite = 0;//"./planets/grassPlanet.png";
-    Player player;
-    player.standingOn = solar.getPlanet(0);
-    if (player.standingOn)
-    player.rect = {player.standingOn->center.x,player.standingOn->center.y - player.standingOn->radius,20,20};
+    //Player player;
+    //player.standingOn = solar.getPlanet(0);
+    //if (player.standingOn)
+    //player.rect = {player.standingOn->center.x,player.standingOn->center.y - player.standingOn->radius,20,20};
+
+    Game::init();
+//REFACTOR: Make it so functions that need solar system just get it from Game rather than getting it passed in.
+
+    BaseAnimation anime("sprites/guy.png",8,8,1);
+
+
+
+    Entity* rabbit = new Entity();
+    rabbit->addComponent(*(new MoveOnPlanetComponent(*Game::getSolar().getPlanet(0),{30,30},.5,*rabbit)));
+    //rabbit.addComponent(*(new RabbitAI(rabbit)));
+    rabbit->addComponent(*(new BasicSpriteComponent("sprites/bunny.png",*rabbit)));
+    //rabbit.addComponent(*(new RectRenderComponent(rabbit,{1,1,1,1})));
+    rabbit->addComponent(*(new GravityForcesComponent(*rabbit)));
+    rabbit->addComponent(*(new AIComponent(*rabbit,
+                                          *(new SequenceUnit(0,0,false,(HopAIFunc(*rabbit,0.5)))),
+                                          *(new SequenceUnit(1000,1,false,[](int){}))
+                                          )));
+
+
+    //BaseAnimationComponent comp(rabbit,anime);
+
+    //Game::getManager().addEntity(*rabbit);
+
     Sprite background;
     background.init("sprites/blueplanet.png");
     RenderCamera camera;
     camera.init(screenWidth,screenHeight);
+    Sprite bunny("planets/red.png");
+
+    ViewPort::currentCamera = &camera;
     //BackgroundProgram backgroundProgram;
     BasicRenderPipeline backgroundProgram;
     backgroundProgram.init("./shaders/backgroundShader.h","./shaders/starLightShader.h",{2});
@@ -68,6 +98,8 @@ int main(int args, char* argsc[])
     glUniform4f(glGetUniformLocation(backgroundProgram.program,"voidColor"),0,0,.5,1);
 
 
+    //Follower apple({30,30,30,30},&player,&appleSprite);
+
 
     //RenderProgram test()
 
@@ -75,8 +107,9 @@ int main(int args, char* argsc[])
     //backgroundProgram.setMatrix4fv("proj",glm::value_ptr(proj));
 
     //Planet::outlineProgram.init("../../resources/shaders/vertex/betterShader.h","../../resources/shaders/fragment/outlineShader.h",{4,1,1,1});
-
     SDL_ShowCursor(SDL_DISABLE);
+
+
     while (!quit)
     {
         while (SDL_PollEvent(&e))
@@ -98,23 +131,24 @@ int main(int args, char* argsc[])
 
         //glDepthMask(false);
        backgroundProgram.draw(GL_TRIANGLES,camera.getCenter());
-       //        glDepthMask(true);
 
-        //SpriteManager::request(PlanetSpriteManager::PlanetSprites.getSprite(0),ViewPort::basicProgram,{glm::vec4(270,270,100,100),0});
-        player.update(solar,camera);
-        solar.update();
+        Game::update();
 
-        camera.recenter({player.rect.x + player.rect.z/2,player.rect.y + player.rect.a/2});
+        //apple.update();
+        //solar.update();
+
+        //camera.recenter({player.rect.x + player.rect.z/2,player.rect.y + player.rect.a/2});
+        camera.recenter(Game::getPlayer().getComponent<RectComponent>()->getCenter());
         //camera.recenter({screenWidth,screenHeight});
         //printRect(camera.getRect());
-        float fuelHeight = player.fuel/100.0*100;
+        //float fuelHeight = player.fuel/100.0*100;
         //PolyRender::requestRect(camera.toWorld({10,screenHeight - fuelHeight - 10,30,fuelHeight}),{1,0,0,1},true,0,1);
         //PolyRender::requestRect({0,0,screenWidth*5,screenHeight*5},{0,0,0,.2},true,0,0);
 
-        ViewPort::update(&camera);
+        ViewPort::update();
         SpriteManager::render();
         PolyRender::render();
-        //Font::alef.write(Font::wordProgram,convert(DeltaTime::deltaTime),0,320,0,1,{0,0,0});
+        //Font::tnr.write(Font::wordProgram,convert(DeltaTime::deltaTime),0,320,0,1,{0,0,0});
         GLContext::update();
         eventsEmpty = true;
         DeltaTime::update();

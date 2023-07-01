@@ -10,8 +10,10 @@ typedef int SpritePath; //index of sprite, -1 for error sprite
 struct Planet
 {
     static RenderProgram outlineProgram;
-    static constexpr int MIN_RADIUS = 10;
-    static constexpr int MAX_RADIUS = 500;
+    static constexpr int MIN_RADIUS = 100;
+    static constexpr int MAX_RADIUS = 200;
+    glm::vec2 getPlanetSurfacePoint(float tilt, const glm::vec2& point); //move "point" so that it is "tilt" angle from the center. Makes sure the result is not inside the planet
+    glm::vec2 getPlanetSurfacePoint(float tilt, const glm::vec4& rect); //adjust "rect" to be at "tilt" from the center. Returns the center of the rect
     glm::vec2 center = glm::vec2(0);
     float radius = 0;
     SpritePath sprite;
@@ -30,6 +32,7 @@ struct PlanetSpriteManager //keeps track of every planet sprite
     static const std::string SpritesDirectory;
     static const std::string ErrorMSG;
     static constexpr SpritePath ErrorPath = -1;
+    static BasicRenderPipeline GravityFieldRender; //used to render gravity fields
     Sprite& getSprite(SpritePath src);
     SpritePath assignSpritePath(); //get random spritePath, -1 if no sprites
 private:
