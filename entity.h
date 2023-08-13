@@ -7,6 +7,10 @@
 #include "planet.h"
 #include "starSystem.h"
 
+float circleDistance(const glm::vec2& a, const glm::vec2& b, Planet& p); //returns the distance between a and b on the surface of p
+float getPointAngle(const glm::vec2& point, const glm::vec2& center); //returns the angle between "point" and "center", use to calculate angle on a planet
+bool clearLine(const glm::vec2& a, const glm::vec2& b, StarSystem& system); //returns true if no planet in "system" blocks the line between "a" and "b"
+
 glm::vec2 getPerpendicularVector(const glm::vec2& vec);
 
 enum Facing
@@ -17,16 +21,30 @@ enum Facing
 
 Facing reverseFacing(Facing f);
 
+struct MovePhysicsConstants
+{
+    //represents a collection of constants that determines how an entity moves
+    static constexpr float BASE_SPEED = 1.0f;
+    static constexpr float BASE_ACCEL = 0.1f;
+    static constexpr float BASE_DECEL = 0.9f;
+    static constexpr float BASE_AERIAL_ACCEL = 0.1f;
+
+    float speed = BASE_SPEED; //maximum amount to move by every frame
+    float accel = BASE_ACCEL; //amount to add in speed by every frame
+    float decel = BASE_DECEL; //%of speed remaining after decelerating
+    float aerial_accel = BASE_AERIAL_ACCEL; //acceleration if in the air
+};
+
 class MoveOnPlanetComponent : public BasicMoveComponent, public ComponentContainer<MoveOnPlanetComponent>
 {
     //for moving along planets in a non-force related manner, such as walking along the surface.
 public:
-    MoveOnPlanetComponent(const glm::vec4& rect_, float speed_, Entity& entity);
-    MoveOnPlanetComponent(Planet& planet, const glm::vec2& dimen, float speed_, Entity& entity);
+    MoveOnPlanetComponent(const glm::vec4& rect_, const MovePhysicsConstants& constants, Entity& entity);
+    MoveOnPlanetComponent(Planet& planet, const glm::vec2& dimen, const MovePhysicsConstants& constants, Entity& entity);
 
     virtual void setStandingOn(Planet* planet);
     void setFacing(Facing dir);
-    void addSpeed(float speed);
+    void setSpeed(float speed);
 
     Planet* getStandingOn();
     float getSpeed();
@@ -39,17 +57,26 @@ public:
     void moveCenter(const glm::vec2& pos); //wrapper function for setCenter. Try to use this for setting the center unless it's for something that shouldn't be affected by physics, like spawning an entity
     glm::vec2 moveOnCircle(float dist, bool angle = false); //return the new center if entity moves "dist" amount along a surface. If "angle" is true, "dist" is treated as the amount of radians to move while standing on a planet. "angle" is ignored if not standing on anything
     glm::vec2 moveOnCircle(const glm::vec2& target); //returns next center point to move to, which is either "speed" away or the target
+
+    void accel(float amount); //increase "velocity" by "amount" up to "speed"
+    void accel(bool accelerate = true); //increase "velocity" by "accelerate" if "accelerate is true, otherwise decrease
+    void accelMult(float amount); //multiply "velocity" by "amount". Usually used to decelerate
+
     void update();
 private:
-    float getTiltGivenPlanet(Planet& planet); //returns the tilt if standing on "planet"
-    void setMovedAmount(float amount_);
-    Planet* standingOn = 0;
+    float velocity = 0;
+    float oldVelocity = 0;
+    MovePhysicsConstants constants;
+    float baseSpeed = MovePhysicsConstants::BASE_SPEED;
     bool onGround= true;
-    float speed = 1;
-    float baseSpeed = 1;
+    Planet* standingOn = 0;
     float movedAmount = 0; //how much we moved last frame
     glm::vec2 lastCenter = {0,0}; //center of our last frame
     Facing facing = FORWARD;
+
+    float getTiltGivenPlanet(Planet& planet); //returns the tilt if standing on "planet"
+    void setMovedAmount(float amount_);
+
 };
 
 class GravityForcesComponent : public ForcesComponent, public ComponentContainer<GravityForcesComponent>
@@ -78,16 +105,18 @@ class EntityAnimationComponent : public BaseAnimationComponent, public Component
     //lets us choose which subsection of the spritesheet we want to render from
     glm::vec4 subSection;
     RenderEffect effect = NONE;
+    glm::vec4 tint = {0,0,0,0};
 public:
-    EntityAnimationComponent(Entity&, BaseAnimation& anime, int fps = 1, ZType zPos = 0);
-    template<typename... T>
+    EntityAnimationComponent(Entity&, Sprite& spriteSheet, ZType zPos = 0, const BaseAnimation& anime = {});
+    /*template<typename... T>
     void request(RenderProgram& program, const FullPosition& pos, T... stuff)
     {
-        SpriteManager::request(*sprite,program,pos,subSection,sprite->getFramesDimen(),SDL_GetTicks() - start,fps, stuff...);
-    }
-    void update();
-    void setSubSection(const glm::vec4& rect);
+        SpriteManager::request(*spriteSheet,program,pos,subSection,sprite->getFramesDimen(),SDL_GetTicks() - start,fps, stuff...);
+    }*/
+    virtual void update();
+    void setAnimation(const BaseAnimation& anime);
     void setEffect(RenderEffect effect_);
+    void setTint(const glm::vec4& tint_);
 };
 
 class DeadComponent : public Component, public ComponentContainer<DeadComponent>
@@ -115,6 +144,14 @@ public:
 private:
     std::shared_ptr<IsDeadCallableBase> isDead; //Callable that returns true if this entity is now dead (Entity* -> bool)
     bool dead = false;
+};
+
+class EnemyComponent : public Component, public ComponentContainer<EnemyComponent>
+{
+    float collideDamage = 0; //damage from colliding
+public:
+    EnemyComponent(float collideDamage_,Entity& entity);
+    virtual void collide(Entity& other);
 };
 
 #endif // ENTITY_H_INCLUDED

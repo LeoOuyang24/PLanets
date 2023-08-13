@@ -136,12 +136,12 @@
 		<Unit filename="AI.h" />
 		<Unit filename="critter.cpp" />
 		<Unit filename="critter.h" />
-		<Unit filename="entity.cpp">
-			<Option target="Debug" />
-		</Unit>
+		<Unit filename="entity.cpp" />
 		<Unit filename="entity.h" />
 		<Unit filename="follower.cpp" />
 		<Unit filename="follower.h" />
+		<Unit filename="game.cpp" />
+		<Unit filename="game.h" />
 		<Unit filename="main.cpp" />
 		<Unit filename="map.h">
 			<Option target="Release" />
@@ -150,11 +150,16 @@
 		<Unit filename="planet.h" />
 		<Unit filename="player.cpp" />
 		<Unit filename="player.h" />
+		<Unit filename="projectile.cpp" />
+		<Unit filename="projectile.h" />
 		<Unit filename="shaders.cpp" />
 		<Unit filename="shaders.h" />
 		<Unit filename="shaders/backgroundShader.h" />
 		<Unit filename="shaders/dottedFragment.h" />
 		<Unit filename="shaders/dottedVertex.h" />
+		<Unit filename="shaders/gravityVertexShader.h" />
+		<Unit filename="shaders/persShader.h" />
+		<Unit filename="shaders/starLightShader.h" />
 		<Unit filename="starSystem.cpp" />
 		<Unit filename="starSystem.h" />
 		<Extensions>

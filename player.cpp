@@ -34,6 +34,7 @@ void PlayerControlsComponent::update()
             bullet->getComponent<GravityForcesComponent>()->addForce(shootForce);
             Game::getManager().addEntity(*bullet,move->getCenter().x,move->getCenter().y);
         }
+        PlayerHealthComponent* health = entity->getComponent<PlayerHealthComponent>();
         bool AIsPressed = KeyManager::isPressed(SDLK_a);
         bool DIsPressed = KeyManager::isPressed(SDLK_d);
         if (KeyManager::getJustPressed() == SDLK_d)
@@ -44,53 +45,55 @@ void PlayerControlsComponent::update()
         {
             move->setFacing(BACKWARD);
         }
-        bool moveLeftOrRight = AIsPressed || DIsPressed;
-        if (moveLeftOrRight)
+        if (!health->getFallingBack())
         {
-            move->accel(DIsPressed
-                        ,KeyManager::isPressed(SDLK_LCTRL) ? PlayerMoveComponent::PLAYER_SPRINT_SPEED : PlayerMoveComponent::PLAYER_SPEED);
-            if (EntityAnimationComponent* comp = entity->getComponent<EntityAnimationComponent>())
+            bool moveLeftOrRight = (AIsPressed || DIsPressed);
+            if (moveLeftOrRight)
             {
-                comp->setSubSection({0,0,8,1});
-            }
-        }
-        else
-        {
-            if (EntityAnimationComponent* comp = entity->getComponent<EntityAnimationComponent>())
-            {
-                comp->setSubSection({0,0,1,1});
-            }
-            move->accelMult(move->getOnGround() ? PlayerMoveComponent::PLAYER_DECEL : .999);
-        }
-
-        if (KeyManager::getJustPressed() == SDLK_SPACE)
-        {
-            if (forces && move->getOnGround())
-            {
-                glm::vec2 jumpVec = glm::normalize(move->getCenter() - move->getStandingOn()->center);
-                if ((moveLeftOrRight))
+                move->setSpeed(KeyManager::isPressed(SDLK_LCTRL) ? PlayerMoveComponent::PLAYER_SPRINT_SPEED : PlayerMoveComponent::PLAYER_SPEED);
+                move->accel(DIsPressed); //move clockwise if D is pressed, otherwise move counter clockwise //sprint if sprinting
+                if (EntityAnimationComponent* comp = entity->getComponent<EntityAnimationComponent>())
                 {
-                    glm::vec2 forwardVec = (1.0f - 2*move->getFacing())*glm::vec2(-jumpVec.y,jumpVec.x); //calculate horizontal vector, multiply by -1 if moving clockwise
-                    //forwardVec = {-cos(move->getTilt()), -sin(move->getTilt())};
-                    //jumpVec = jumpVec + (move->getMovedAmount()/move->getBaseSpeed())*forwardVec;
+                    comp->setAnimation({{0,0,1,0.5},8,1,16});
                 }
-                forces->addForce(jumpVec); //+ .5f*moveAmount*glm::normalize(glm::vec2(planetToPlayerVec.y,-planetToPlayerVec.x)));
-                //onGround = false;
             }
-        }
-        if (KeyManager::isPressed(SDLK_LSHIFT) || KeyManager::isPressed(SDLK_RSHIFT))
-        {
-            if (forces && fuel > 0)
+            else
             {
-                float tilt = atan2(mousePos.y - move->getCenter().y, mousePos.x - move->getCenter().x);
-                move->setTilt(tilt);
-                forces->addForce(0.1f*ForceVector(cos(tilt),sin(tilt)));
-                fuel = std::max(0,fuel - 1);
+                if (EntityAnimationComponent* comp = entity->getComponent<EntityAnimationComponent>())
+                {
+                    comp->setAnimation({{0,0,.125,0.5}});
+                }
             }
-        }
-        else
-        {
-            fuel = std::min(MAX_FUEL,fuel + 1);
+
+            if (KeyManager::getJustPressed() == SDLK_SPACE)
+            {
+                if (forces && move->getOnGround())
+                {
+                    glm::vec2 jumpVec = glm::normalize(move->getCenter() - move->getStandingOn()->center);
+                    if ((moveLeftOrRight))
+                    {
+                        glm::vec2 forwardVec = (1.0f - 2*move->getFacing())*glm::vec2(-jumpVec.y,jumpVec.x); //calculate horizontal vector, multiply by -1 if moving clockwise
+                        //forwardVec = {-cos(move->getTilt()), -sin(move->getTilt())};
+                        //jumpVec = jumpVec + (move->getMovedAmount()/move->getBaseSpeed())*forwardVec;
+                    }
+                    forces->addForce(jumpVec); //+ .5f*moveAmount*glm::normalize(glm::vec2(planetToPlayerVec.y,-planetToPlayerVec.x)));
+                    //onGround = false;
+                }
+            }
+            if (KeyManager::isPressed(SDLK_LSHIFT) || KeyManager::isPressed(SDLK_RSHIFT))
+            {
+                if (forces && fuel > 0)
+                {
+                    float tilt = atan2(mousePos.y - move->getCenter().y, mousePos.x - move->getCenter().x);
+                    move->setTilt(tilt);
+                    forces->addForce(0.1f*ForceVector(cos(tilt),sin(tilt)));
+                    fuel = std::max(0,fuel - 1);
+                }
+            }
+            else
+            {
+                fuel = std::min(MAX_FUEL,fuel + 1);
+            }
         }
 
         //move->moveCenter(move->moveOnCircle(move->getSpeed()));
@@ -98,7 +101,7 @@ void PlayerControlsComponent::update()
         PolyRender::requestLine(glm::vec4(move->getCenter(),mousePos),glm::vec4(1,0,0,1),1,1);
         PolyRender::requestCircle(glm::vec4(1,0,0,1),mousePos,10,false,1);
 
-        setMovedLastFrame(moveLeftOrRight);
+        //setMovedLastFrame(moveLeftOrRight);
     }
 }
 
@@ -107,7 +110,7 @@ void PlayerControlsComponent::setMovedLastFrame(bool moved_)
     movedLastFrame = moved_;
 }
 
-PlayerMoveComponent::PlayerMoveComponent(Entity& player) : MoveOnPlanetComponent({0,0,PLAYER_DIMEN,PLAYER_DIMEN},PLAYER_SPEED,player), ComponentContainer<PlayerMoveComponent>(player)
+PlayerMoveComponent::PlayerMoveComponent(Entity& player) : MoveOnPlanetComponent({0,0,PLAYER_DIMEN,PLAYER_DIMEN},{PLAYER_DIMEN,PLAYER_ACCEL,PLAYER_DECEL,PLAYER_IN_AIR_ACCEL},player), ComponentContainer<PlayerMoveComponent>(player)
 {
 
 }
@@ -126,27 +129,72 @@ void PlayerMoveComponent::setStandingOn(Planet* planet)
     }
 }
 
-void PlayerMoveComponent::accel(float amount, float upTo)
-{
-    velocity = std::max(std::min(abs(upTo),velocity + (getOnGround()*(1 - PLAYER_IN_AIR_ACCEL) + PLAYER_IN_AIR_ACCEL)*amount),-1*abs(upTo)); //accelerate, doing it slower if we are in the air
-}
-
-void PlayerMoveComponent::accel(bool accelerate, float upTo)
-{
-    accel((accelerate*2 - 1)*PLAYER_ACCEL,upTo);
-}
-
-void PlayerMoveComponent::accelMult(float amount)
-{
-    velocity *= amount;
-}
 
 void PlayerMoveComponent::update()
 {
-    moveCenter(moveOnCircle(velocity));
+    //moveCenter(moveOnCircle(velocity));
     //setFacing(velocity > 0 ? FORWARD : BACKWARD);
     MoveOnPlanetComponent::update();
 }
+
+PlayerHealthComponent::PlayerHealthComponent(Entity& player) : BaseHealthComponent(1000,PlayerHealthComponent::PLAYER_MAX_HEALTH,PlayerHealthComponent::PLAYER_MAX_HEALTH,player), ComponentContainer<PlayerHealthComponent>(player)
+{
+
+}
+
+void PlayerHealthComponent::takeDamage(Entity& source, int damage)
+{
+    if (damage > 0 && !isInvuln())
+    {
+        if (ForcesComponent* forces = entity->getComponent<ForcesComponent>())
+        if (RectComponent* sourcePos = source.getComponent<RectComponent>())
+        if (MoveOnPlanetComponent* ourPos = entity->getComponent<MoveOnPlanetComponent>())
+        {
+            glm::vec2 hurtVec = betterNormalize(ourPos->getCenter() - sourcePos->getCenter() );
+            if (!ourPos->getOnGround())
+            {
+                fallingBack = true;
+                forces->addForce(hurtVec);
+            }
+            else
+            {
+                fallingBack = true;
+                ourPos->accelMult(-1);
+            }
+            //hurtVec *= .1f;
+        }
+        BaseHealthComponent::addHealth(-damage);
+    }
+}
+
+void PlayerHealthComponent::update()
+{
+    if (fallingBack)
+    {
+        if (EntityAnimationComponent* anime = entity->getComponent<EntityAnimationComponent>())
+        {
+            anime->setAnimation({{0,0.5,0.125,0.5},1,1});
+        }
+        if (!isInvuln())
+        {
+            fallingBack = false;
+        }
+        else
+        {
+            if (MoveOnPlanetComponent* move = entity->getComponent<MoveOnPlanetComponent>())
+            if (move->getOnGround() && (invuln.getTimePassed() >= invulnTime*.3))
+            {
+                fallingBack = false;
+            }
+        }
+    }
+}
+
+bool PlayerHealthComponent::getFallingBack()
+{
+    return fallingBack;
+}
+
 
 void Player::update(StarSystem& system, RenderCamera& camera)
 {
@@ -306,8 +354,10 @@ Entity* Player::createPlayer(StarSystem& system)
     player->addComponent(*(new PlayerMoveComponent(*player)));
     //player->addComponent(*(new MoveOnPlanetComponent(*system.getPlanet(0),{20,30},1,*player)));
     player->addComponent(*(new GravityForcesComponent(*player)));
+    player->addComponent(*(new PlayerHealthComponent(*player)));
     //player->addComponent(*(new RectRenderComponent(*player,glm::vec4(1,0,0,1))));
-    BaseAnimation* anime = new BaseAnimation("sprites/guy.png",2,8,1, {0,0,8,1});
-    player->addComponent(*(new EntityAnimationComponent(*player, *anime,8,1)));
+    Sprite* sprite = new Sprite("sprites/guy.png");
+    //BaseAnimation anime = {2,8,1, {0,0,1,1}};
+    player->addComponent(*(new EntityAnimationComponent(*player, *sprite,1)));
     return player;
 }

@@ -41,6 +41,11 @@ void StarSystem::update()
     }
 }
 
+size_t StarSystem::size()
+{
+    return planets.size();
+}
+
 Planet* StarSystem::getPlanet(int index)
 {
     if (index < 0 || index >= planets.size())

@@ -13,12 +13,20 @@ class GameEntitiesManager : public EntityPosManager
     bool forEachEntity(Entity& it);
 };
 
+struct Shaders
+{
+    RenderProgram SpriteProgram; //handles animations
+    void init();
+};
+
 class Game
 {
     static GameEntitiesManager manager;
     static StarSystem solar;
     static std::shared_ptr<Entity> player;
+    static void renderInterface();
 public:
+    static Shaders GameShaders;
     static void init();
     static void update();
     static EntityPosManager& getManager();

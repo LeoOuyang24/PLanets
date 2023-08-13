@@ -47,11 +47,20 @@ public:
     static constexpr float PLAYER_IN_AIR_ACCEL = 0.1f; //acceleration if we are in the air
     PlayerMoveComponent(Entity& player);
     void setStandingOn(Planet* planet);
-    void accel(float amount = PLAYER_ACCEL, float upTo = PLAYER_SPEED); //increase "velocity" by "amount" up to "upTo"
-    void accel(bool accelerate = true, float upTo = PLAYER_SPEED); //increase "velocity" by "PLAYER_ACCEL" if "accelerate is true, otherwise decrease
-    void accelMult(float amount = PLAYER_DECEL); //multiply "velocity" by "amount". Usually used to decelerate
     void update();
 };
+
+class PlayerHealthComponent : public BaseHealthComponent, public ComponentContainer<PlayerHealthComponent>
+{
+    bool fallingBack = false; //"free fall". basically a stun as a result of getting hit in the air
+public:
+    constexpr static int PLAYER_MAX_HEALTH = 100;
+    PlayerHealthComponent(Entity& player);
+    void takeDamage(Entity& source, int damage); //damage is expected to be positive
+    void update();
+    bool getFallingBack();
+};
+
 
 struct Player
 {

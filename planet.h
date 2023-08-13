@@ -12,6 +12,8 @@ struct Planet
     static RenderProgram outlineProgram;
     static constexpr int MIN_RADIUS = 100;
     static constexpr int MAX_RADIUS = 200;
+    static const glm::vec4 CENTER_GRAVITY_COLOR; //center of gravity field color
+    static const glm::vec4 EDGE_GRAVITY_COLOR; //edge of gravity field color
     glm::vec2 getPlanetSurfacePoint(float tilt, const glm::vec2& point); //move "point" so that it is "tilt" angle from the center. Makes sure the result is not inside the planet
     glm::vec2 getPlanetSurfacePoint(float tilt, const glm::vec4& rect); //adjust "rect" to be at "tilt" from the center. Returns the center of the rect
     glm::vec2 center = glm::vec2(0);

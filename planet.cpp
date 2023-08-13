@@ -3,6 +3,8 @@
 #include "planet.h"
 
 RenderProgram Planet::outlineProgram;
+const glm::vec4 Planet::CENTER_GRAVITY_COLOR = {1,1,1,1};
+const glm::vec4 Planet::EDGE_GRAVITY_COLOR = {0,1,1,0};
 
 glm::vec2 Planet::getPlanetSurfacePoint(float tilt, const glm::vec2& point)
 {
@@ -18,7 +20,8 @@ glm::vec2 Planet::getPlanetSurfacePoint(float tilt, const glm::vec4& rect)
 void Planet::render()
 {
     SpriteManager::request(PlanetSpriteManager::PlanetSprites.getSprite(sprite),ViewPort::basicProgram,{glm::vec4(center - glm::vec2(radius,radius),radius*2,radius*2),0});
-    PlanetSpriteManager::GravityFieldRender.draw(GL_TRIANGLES,center,getGravityRadius());
+
+    PlanetSpriteManager::GravityFieldRender.draw(GL_TRIANGLES,center,getGravityRadius(),CENTER_GRAVITY_COLOR,EDGE_GRAVITY_COLOR);
     PolyRender::requestCircle({0,1,1,1},center,getGravityRadius(),false,0);
    //PolyRender::requestNGon(10,center,radius,{1,1,1,1},0,true,1,1);
 }
@@ -52,7 +55,7 @@ void PlanetSpriteManager::init()
     }
     errorMessage.load(ErrorMSG);
 
-    GravityFieldRender.init("./shaders/gravityVertexShader.h","./shaders/gravityFragmentShader.h",{2,1});
+    GravityFieldRender.init("./shaders/gravityVertexShader.h","./shaders/gravityFragmentShader.h",{2,1,4,4});
 }
 
 Sprite& PlanetSpriteManager::getSprite(SpritePath src)

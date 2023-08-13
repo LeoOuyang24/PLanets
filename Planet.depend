@@ -341,7 +341,7 @@
 	"begin_code.h"
 	"close_code.h"
 
-1686503702 c:\users\leoou\onedrive\desktop\resources\render.h
+1691122735 c:\users\leoou\onedrive\desktop\resources\render.h
 	<iostream>
 	<vector>
 	<map>
@@ -915,7 +915,7 @@
 
 1524390096 c:\users\leoou\onedrive\desktop\freetype-2.9.1\include\freetype\config\ftheader.h
 
-1685080983 c:\users\leoou\onedrive\desktop\resources\geometry.h
+1690734104 c:\users\leoou\onedrive\desktop\resources\geometry.h
 	<vector>
 	<map>
 	"glew.h"
@@ -923,7 +923,7 @@
 	"gtc/matrix_transform.hpp"
 	"gtc/type_ptr.hpp"
 
-1687229181 source:c:\users\leoou\onedrive\desktop\projects\planet\main.cpp
+1691885184 source:c:\users\leoou\onedrive\desktop\projects\planet\main.cpp
 	<iostream>
 	<time.h>
 	<SDL.h>
@@ -938,6 +938,7 @@
 	"critter.h"
 	"AI.h"
 	"game.h"
+	"enemy.h"
 
 1519936706 c:\users\leoou\onedrive\desktop\sdlstuff\sdl2-2.0.8\x86_64-w64-mingw32\include\sdl2\sdl.h
 	"SDL_main.h"
@@ -1273,22 +1274,22 @@
 	"begin_code.h"
 	"close_code.h"
 
-1687483353 source:c:\users\leoou\onedrive\desktop\projects\planet\planet.cpp
+1690750568 source:c:\users\leoou\onedrive\desktop\projects\planet\planet.cpp
 	<dirent.h>
 	"planet.h"
 
-1687729705 c:\users\leoou\onedrive\desktop\projects\planet\planet.h
+1690675725 c:\users\leoou\onedrive\desktop\projects\planet\planet.h
 	"render.h"
 	"components.h"
 
-1688186002 source:c:\users\leoou\onedrive\desktop\projects\planet\player.cpp
+1690570244 source:c:\users\leoou\onedrive\desktop\projects\planet\player.cpp
 	"SDLhelper.h"
 	"geometry.h"
 	"player.h"
 	"game.h"
 	"projectile.h"
 
-1687800565 c:\users\leoou\onedrive\desktop\projects\planet\player.h
+1690521875 c:\users\leoou\onedrive\desktop\projects\planet\player.h
 	"render.h"
 	"planet.h"
 	"starSystem.h"
@@ -1300,13 +1301,13 @@
 1675052862 c:\users\leoou\onedrive\desktop\projects\planet\map.h
 	"planet.h"
 
-1687586783 source:c:\users\leoou\onedrive\desktop\projects\planet\starsystem.cpp
+1689293909 source:c:\users\leoou\onedrive\desktop\projects\planet\starsystem.cpp
 	"starSystem.h"
 
-1687729692 c:\users\leoou\onedrive\desktop\projects\planet\starsystem.h
+1690734133 c:\users\leoou\onedrive\desktop\projects\planet\starsystem.h
 	"planet.h"
 
-1687719337 c:\users\leoou\onedrive\desktop\resources\components.h
+1691383947 c:\users\leoou\onedrive\desktop\resources\components.h
 	<memory.h>
 	<unordered_map>
 	<unordered_set>
@@ -1341,15 +1342,16 @@
 1680331528 c:\users\leoou\onedrive\desktop\projects\planet\follower.h
 	"player.h"
 
-1688185092 c:\users\leoou\onedrive\desktop\projects\planet\entity.h
+1690569356 c:\users\leoou\onedrive\desktop\projects\planet\entity.h
 	"physics.h"
 	"components.h"
 	"planet.h"
 	"starSystem.h"
 
-1688185092 source:c:\users\leoou\onedrive\desktop\projects\planet\entity.cpp
+1690738267 source:c:\users\leoou\onedrive\desktop\projects\planet\entity.cpp
 	"entity.h"
 	"game.h"
+	"player.h"
 
 1687585584 c:\users\leoou\onedrive\desktop\resources\physics.h
 	"components.h"
@@ -1362,12 +1364,13 @@
 1686295278 c:\users\leoou\onedrive\desktop\projects\planet\critter.h
 	"components.h"
 
-1683439492 source:c:\users\leoou\onedrive\desktop\projects\planet\ai.cpp
+1691806414 source:c:\users\leoou\onedrive\desktop\projects\planet\ai.cpp
 	"AI.h"
 	"entity.h"
 	"planet.h"
+	"game.h"
 
-1683068229 c:\users\leoou\onedrive\desktop\projects\planet\ai.h
+1691885075 c:\users\leoou\onedrive\desktop\projects\planet\ai.h
 	"sequencer.h"
 	"components.h"
 
@@ -1378,12 +1381,12 @@
 	"SDLhelper.h"
 	"render.h"
 
-1687719190 source:c:\users\leoou\onedrive\desktop\projects\planet\game.cpp
+1689915870 source:c:\users\leoou\onedrive\desktop\projects\planet\game.cpp
 	"game.h"
 	"entity.h"
 	"player.h"
 
-1686797105 c:\users\leoou\onedrive\desktop\projects\planet\game.h
+1689913226 c:\users\leoou\onedrive\desktop\projects\planet\game.h
 	<unordered_map>
 	"components.h"
 	"glGame.h"
@@ -1396,4 +1399,12 @@
 1686794570 c:\users\leoou\onedrive\desktop\projects\planet\projectile.h
 	"entity.h"
 	"game.h"
+
+1691884983 source:c:\users\leoou\onedrive\desktop\projects\planet\enemy.cpp
+	"enemy.h"
+	"game.h"
+
+1691886034 c:\users\leoou\onedrive\desktop\projects\planet\enemy.h
+	"entity.h"
+	"AI.h"
 

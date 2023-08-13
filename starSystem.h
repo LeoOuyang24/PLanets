@@ -7,14 +7,15 @@ class StarSystem
 {
     //collection of planets
     std::vector<std::unique_ptr<Planet>> planets;
-    static constexpr int MIN_PLANETS = 3;
-    static constexpr int MAX_PLANETS = 4;
+    static constexpr int MIN_PLANETS = 1;
+    static constexpr int MAX_PLANETS = 1;
     static constexpr int MIN_PLANETS_SPACE = 50;
     void generatePlanet(const glm::vec2& center);
 public:
     void init(int num);
     void init();
     void update();
+    size_t size();
     Planet* getPlanet(int index); //returns planet at "index", null if it does not exist
     template<typename T>
     void processPlanets(T func) //pass a function that is then run on each planet. Return true if you wish to terminate early
@@ -37,7 +38,16 @@ public:
             }
         }
     }
-
+    template<typename T, typename I>
+    I foldLeftPlanets(T func, I initial) //given a function and an initial value, run it on each planet and return a value accordingly
+    {
+        //T = (Planet&, I) -> I
+        I value = initial;
+        processPlanets([&value,&func](Planet& planet){
+                       value = func(planet, value);
+                       });
+        return value;
+    }
 };
 
 #endif //STARSYSTEM_H_INCLUDED

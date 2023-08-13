@@ -14,6 +14,7 @@
 #include "critter.h"
 #include "AI.h"
 #include "game.h"
+#include "enemy.h"
 
 int main(int args, char* argsc[])
 {
@@ -60,25 +61,45 @@ int main(int args, char* argsc[])
     Game::init();
 //REFACTOR: Make it so functions that need solar system just get it from Game rather than getting it passed in.
 
-    BaseAnimation anime("sprites/guy.png",8,8,1);
 
 
-
+    Sprite chomper ("sprites/chomperSheet.png");
     Entity* rabbit = new Entity();
-    rabbit->addComponent(*(new MoveOnPlanetComponent(*Game::getSolar().getPlanet(0),{30,30},.5,*rabbit)));
+    rabbit->addComponent(*(new MoveOnPlanetComponent(*Game::getSolar().getPlanet(0),{30,30},{},*rabbit)));
     //rabbit.addComponent(*(new RabbitAI(rabbit)));
-    rabbit->addComponent(*(new BasicSpriteComponent("sprites/bunny.png",*rabbit)));
+    rabbit->addComponent(*(new EntityAnimationComponent(*rabbit,chomper,1)));
     //rabbit.addComponent(*(new RectRenderComponent(rabbit,{1,1,1,1})));
     rabbit->addComponent(*(new GravityForcesComponent(*rabbit)));
-    rabbit->addComponent(*(new AIComponent(*rabbit,
-                                          *(new SequenceUnit(0,0,false,(HopAIFunc(*rabbit,0.5)))),
-                                          *(new SequenceUnit(1000,1,false,[](int){}))
+    rabbit->addComponent(*(new AIComponent(*rabbit, AIStateBase::PATROL,
+                                          *(new AIState(AIStateBase::PATROL,HopAIFunc(0.5))),
+                                          *(new AIState(AIStateBase::IDLE,[rabbit](int frames, Entity&){
+                                                        if (EntityAnimationComponent* anime = rabbit->getComponent<EntityAnimationComponent>())
+                                                        {
+                                                            anime->setAnimation({BaseAnimation::normalizePixels({0,0,0.2,246},*anime->getSpriteSheet()),1,1});
+                                                        }
+
+                                                        return frames > 100 ? AIStateBase::PATROL : AIStateBase::NOT_DONE;})),
+                                          *(new AIState(AIStateBase::ATTACK,ChomperAttackFunc({}))),
+                                          *(new AIState(AIStateBase::WIND_UP, ChomperWindUpFunc({})))
                                           )));
+    rabbit->addComponent(*(new EnemyComponent(1,*rabbit)));
 
+    Sprite spitter_sprite ("sprites/spitter_idle.png");
+    Entity* spitter = new Entity();
+    spitter->addComponent(*(new MoveOnPlanetComponent(*Game::getSolar().getPlanet(0),{60,60},{},*spitter)));
+    //rabbit.addComponent(*(new RabbitAI(rabbit)));
+    spitter->addComponent(*(new EntityAnimationComponent(*spitter,spitter_sprite,1,{BaseAnimation::normalizePixels({0,0,1,1},spitter_sprite),4,2,8})));
+    //rabbit.addComponent(*(new RectRenderComponent(rabbit,{1,1,1,1})));
 
+    Entity* solarian = new Entity();
+    solarian->addComponent(*(new BasicMoveComponent(glm::vec4(100,100 ,30,30),*solarian)));
+    solarian->addComponent(*(new AIComponent(*solarian,AIStateBase::IDLE,*(new IdleState(1000,AIStateBase::PATROL)),*(new AerialWanderFunc()))));
+    solarian->addComponent(*(new SolarianRenderComponent(*solarian)));
     //BaseAnimationComponent comp(rabbit,anime);
 
-    //Game::getManager().addEntity(*rabbit);
+    Game::getManager().addEntity(*rabbit);
+    Game::getManager().addEntity(*solarian);
+    //Game::getManager().addEntity(*spitter);
 
     Sprite background;
     background.init("sprites/blueplanet.png");
@@ -88,14 +109,6 @@ int main(int args, char* argsc[])
 
     ViewPort::currentCamera = &camera;
     //BackgroundProgram backgroundProgram;
-    BasicRenderPipeline backgroundProgram;
-    backgroundProgram.init("./shaders/backgroundShader.h","./shaders/starLightShader.h",{2});
-    glUseProgram(backgroundProgram.program);
-    glUniform1f(glGetUniformLocation(backgroundProgram.program,"radius"),320.0f);
-    glUniform2f(glGetUniformLocation(backgroundProgram.program,"screenDimen"),screenWidth,screenHeight);
-    glUniform2f(glGetUniformLocation(backgroundProgram.program,"origin"),320,320);
-    glUniform4f(glGetUniformLocation(backgroundProgram.program,"starColor"),1,1,1,1);
-    glUniform4f(glGetUniformLocation(backgroundProgram.program,"voidColor"),0,0,.5,1);
 
 
     //Follower apple({30,30,30,30},&player,&appleSprite);
@@ -108,6 +121,8 @@ int main(int args, char* argsc[])
 
     //Planet::outlineProgram.init("../../resources/shaders/vertex/betterShader.h","../../resources/shaders/fragment/outlineShader.h",{4,1,1,1});
     SDL_ShowCursor(SDL_DISABLE);
+    BasicRenderPipeline pipeline;
+    pipeline.init("./shaders/gravityVertexShader.h","./shaders/gravityFragmentShader.h",{2,1,4,4});
 
 
     while (!quit)
@@ -130,7 +145,7 @@ int main(int args, char* argsc[])
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         //glDepthMask(false);
-       backgroundProgram.draw(GL_TRIANGLES,camera.getCenter());
+       //backgroundProgram.draw(GL_TRIANGLES,camera.getCenter());
 
         Game::update();
 
