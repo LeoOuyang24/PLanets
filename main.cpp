@@ -63,11 +63,11 @@ int main(int args, char* argsc[])
 
 
 
-    Sprite chomper ("sprites/chomperSheet.png");
+    /*Sprite chomper ("sprites/chomperSheet.png");
     Entity* rabbit = new Entity();
-    rabbit->addComponent(*(new MoveOnPlanetComponent(*Game::getSolar().getPlanet(0),{30,30},{},*rabbit)));
+    rabbit->addComponent(*(new MoveOnPlanetComponent(*Game::getSolar().getPlanet(0),{10,10},{},*rabbit)));
     //rabbit.addComponent(*(new RabbitAI(rabbit)));
-    rabbit->addComponent(*(new EntityAnimationComponent(*rabbit,chomper,1)));
+    rabbit->addComponent(*(new EntityAnimationComponent(*rabbit,chomper,GAME_Z)));
     //rabbit.addComponent(*(new RectRenderComponent(rabbit,{1,1,1,1})));
     rabbit->addComponent(*(new GravityForcesComponent(*rabbit)));
     rabbit->addComponent(*(new AIComponent(*rabbit, AIStateBase::PATROL,
@@ -86,28 +86,30 @@ int main(int args, char* argsc[])
 
     Sprite spitter_sprite ("sprites/spitter_idle.png");
     Entity* spitter = new Entity();
-    spitter->addComponent(*(new MoveOnPlanetComponent(*Game::getSolar().getPlanet(0),{60,60},{},*spitter)));
+    spitter->addComponent(*(new MoveOnPlanetComponent(*Game::getSolar().getPlanet(0),{30,30},{},*spitter)));
     //rabbit.addComponent(*(new RabbitAI(rabbit)));
-    spitter->addComponent(*(new EntityAnimationComponent(*spitter,spitter_sprite,1,{BaseAnimation::normalizePixels({0,0,1,1},spitter_sprite),4,2,8})));
+    spitter->addComponent(*(new EntityAnimationComponent(*spitter,spitter_sprite,GAME_Z,{BaseAnimation::normalizePixels({0,0,1,1},spitter_sprite),4,2,8})));
     //rabbit.addComponent(*(new RectRenderComponent(rabbit,{1,1,1,1})));
 
-    Entity* solarian = new Entity();
+    /*Entity* solarian = new Entity();
     solarian->addComponent(*(new BasicMoveComponent(glm::vec4(100,100 ,30,30),*solarian)));
     solarian->addComponent(*(new AIComponent(*solarian,AIStateBase::IDLE,*(new IdleState(1000,AIStateBase::PATROL)),*(new AerialWanderFunc()))));
-    solarian->addComponent(*(new SolarianRenderComponent(*solarian)));
+    solarian->addComponent(*(new SolarianRenderComponent(*solarian)));*/
     //BaseAnimationComponent comp(rabbit,anime);
 
-    Game::getManager().addEntity(*rabbit);
-    Game::getManager().addEntity(*solarian);
+    //Game::getManager().addEntity(*rabbit);
+    //Game::getManager().addEntity(*solarian);
     //Game::getManager().addEntity(*spitter);
 
     Sprite background;
     background.init("sprites/blueplanet.png");
     RenderCamera camera;
-    camera.init(screenWidth,screenHeight);
-    Sprite bunny("planets/red.png");
+    ViewPort::setZRange(0.1f,CAMERA_Z);
+    camera.init({0,0,CAMERA_Z});
+    Sprite bunny("sprites/bunny.png");
 
     ViewPort::currentCamera = &camera;
+    ViewPort::flipProj();
     //BackgroundProgram backgroundProgram;
 
 
@@ -121,9 +123,13 @@ int main(int args, char* argsc[])
 
     //Planet::outlineProgram.init("../../resources/shaders/vertex/betterShader.h","../../resources/shaders/fragment/outlineShader.h",{4,1,1,1});
     SDL_ShowCursor(SDL_DISABLE);
-    BasicRenderPipeline pipeline;
-    pipeline.init("./shaders/gravityVertexShader.h","./shaders/gravityFragmentShader.h",{2,1,4,4});
+    BasicRenderPipeline starLight;
+    starLight.init("./shaders/gravityVertexShader.h","./shaders/starLightShader.h",{3,1,4,4});
 
+    BasicRenderPipeline stars;
+    stars.init("./shaders/gravityVertexShader.h","./shaders/starShader.h",{3,1,4,4});
+
+    glDisable(GL_DEPTH_TEST);
 
     while (!quit)
     {
@@ -146,14 +152,18 @@ int main(int args, char* argsc[])
 
         //glDepthMask(false);
        //backgroundProgram.draw(GL_TRIANGLES,camera.getCenter());
+        camera.setPos(Game::getPlayer().getComponent<RectComponent>()->getCenter());
 
         Game::update();
 
         //apple.update();
         //solar.update();
-
+        //PolyRender::requestRect({0,0,100,100},{1,0,0,1},true,0,1);
+        //SpriteManager::request(background,ViewPort::basicProgram,{{0,0,1000,1000},FAR_Z});
+        //
+        stars.draw(GL_TRIANGLES,glm::vec3(500,500,FAR_Z+1),500.0f,glm::vec4(1,1,1,1),glm::vec4(0,1,1,0));
+        starLight.draw(GL_TRIANGLES,glm::vec3(500,500,FAR_Z),500.0f,glm::vec4(1,1,1,1),glm::vec4(0,1,1,0));
         //camera.recenter({player.rect.x + player.rect.z/2,player.rect.y + player.rect.a/2});
-        camera.recenter(Game::getPlayer().getComponent<RectComponent>()->getCenter());
         //camera.recenter({screenWidth,screenHeight});
         //printRect(camera.getRect());
         //float fuelHeight = player.fuel/100.0*100;

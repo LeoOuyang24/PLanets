@@ -58,6 +58,7 @@ void MoveOnPlanetComponent::setStandingOn(Planet* planet)
     if (planet)
     {
         setTilt(getTiltGivenPlanet(*planet));
+        setLayer(StarSystem::getLayerGivenPlanet(*planet));
     }
 }
 
@@ -89,6 +90,21 @@ bool MoveOnPlanetComponent::getOnGround()
 Facing MoveOnPlanetComponent::getFacing()
 {
     return facing;
+}
+
+float MoveOnPlanetComponent::getMovedAmount()
+{
+    return movedAmount;
+}
+
+float MoveOnPlanetComponent::getTiltGivenPlanet(Planet& planet)
+{
+    return getPointAngle(getCenter(),planet.center);
+}
+
+int MoveOnPlanetComponent::getLayer()
+{
+    return layer;
 }
 
 void MoveOnPlanetComponent::moveCenter(const glm::vec2& center)
@@ -181,7 +197,7 @@ void MoveOnPlanetComponent::update()
                       return true;
                   }
                     return false;
-                  });
+                  },layer);
     }
     if (oldVelocity == velocity) //if we didn't increase in speed this frame
     {
@@ -205,19 +221,15 @@ void MoveOnPlanetComponent::setSpeed(float speed_)
     constants.speed = speed_;
 }
 
-float MoveOnPlanetComponent::getMovedAmount()
-{
-    return movedAmount;
-}
-
-float MoveOnPlanetComponent::getTiltGivenPlanet(Planet& planet)
-{
-    return getPointAngle(getCenter(),planet.center);
-}
 
 void MoveOnPlanetComponent::setMovedAmount(float amount_)
 {
     movedAmount = amount_;
+}
+
+void MoveOnPlanetComponent::setLayer(int newLayer_)
+{
+    layer = newLayer_;
 }
 
 GravityForcesComponent::GravityForcesComponent(Entity& entity) : ForcesComponent(entity), ComponentContainer<GravityForcesComponent>(entity)
@@ -233,7 +245,7 @@ void GravityForcesComponent::update()
         MoveOnPlanetComponent* move = entity->getComponent<MoveOnPlanetComponent>();
         if (move) //this is important for handling "onGround"
         {
-            PolyRender::requestLine(glm::vec4(move->getCenter(), move->getCenter() + 10.0f*finalForce.force),{1,0,0,1},1,1);
+            //PolyRender::requestLine(glm::vec4(move->getCenter(), move->getCenter() + 10.0f*finalForce.force),{1,0,0,1},1,1);
             move->moveCenter(move->getCenter() + finalForce.force); //apply force
             if (move->getOnGround())
             {
@@ -258,7 +270,7 @@ void GravityForcesComponent::update()
                               //PolyRender::requestLine(glm::vec4(center,center + 10000.0f*newForce),{0,1,(&planet == standingOn),1},1,1);
                               addForce(newForce);
                           }
-                          });
+                          },0);
         }
     }
 }

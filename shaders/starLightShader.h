@@ -1,22 +1,53 @@
 #version 330 core
 
+//shader for the gravity field of planets
+//used with gravityVertexShader
+
+#define M_PI 3.1415926535897932384626433832795
+
+
+
+
 out vec4 FragColor;
 
+in vec2 center_;
 in vec2 curPos;
+in float radius_;
+in vec4 centerColor_;
+in vec4 edgeColor_;
 
-uniform float radius;
-uniform vec2 origin;
-uniform vec4 starColor;
-uniform vec4 voidColor;
+/*vec4 CENTER_COLOR = vec4(1,1,1,1);
+vec4 EDGE_COLOR = vec4(0,1,1,0);*/
 
 void main()
 {
-    float dist = length((curPos - origin));
-    float ratio = dist/radius;
-    if (ratio > 1.0)
-    {
-        ratio = 1.0;
-    }
+    float dist = length((curPos - center_)); //find the distance between interpolated pixel and center
+    float angle = atan(curPos.y - center_.y, curPos.x - center_.x) / M_PI * 180;
+
+    float ratio = dist/(radius_*1.1);
+
     //FragColor.g = (length(end - start))/dist;
-    FragColor = starColor + ratio*(voidColor - starColor);
+    /*FragColor = vec4(abs(angle)/M_PI,ratio,0,1);
+    if (ratio>1 )
+    {
+        discard;
+    }*/
+    if (ratio > 1.1) //if beyond the radius
+    {
+        discard;
+    }
+    else if (ratio < .1)
+    {
+        FragColor = centerColor_;
+    }
+    else
+    {
+        FragColor = centerColor_ + (ratio-0.1)*(edgeColor_ - centerColor_);
+        angle = mod(angle,10);
+        if (angle >= 0 && angle < 5)
+        {
+            FragColor.a *= 0.99;
+        }
+    }
+
 }

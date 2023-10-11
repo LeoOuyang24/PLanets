@@ -19,6 +19,12 @@ struct Shaders
     void init();
 };
 
+constexpr ZType CAMERA_Z = 1000; //max z position the camera will be at
+constexpr ZType INTERFACE_Z = CAMERA_Z - 1; //Z of interface elements
+constexpr ZType GAME_Z = CAMERA_Z/2; //z of game elements
+constexpr ZType PLANET_Z = GAME_Z - 1; //z of planets
+constexpr ZType FAR_Z = 0; //background z
+
 class Game
 {
     static GameEntitiesManager manager;

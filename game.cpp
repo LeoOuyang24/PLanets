@@ -28,7 +28,7 @@ void Game::renderInterface()
 {
     if (BaseHealthComponent* health = player->getComponent<BaseHealthComponent>())
     {
-        PolyRender::requestRect(ViewPort::toAbsolute({10,10,health->getHealth()/health->getMaxHealth()*100,10}),{1,0,0,1},true,0,2);
+        PolyRender::requestRect(ViewPort::toAbsolute({10,10,health->getHealth()/health->getMaxHealth()*100,10}),{1,0,0,1},true,0,ViewPort::currentCamera->getPos().z - 1);
     }
     else
     {

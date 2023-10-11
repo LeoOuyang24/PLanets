@@ -6,15 +6,20 @@
 class StarSystem
 {
     //collection of planets
-    std::vector<std::unique_ptr<Planet>> planets;
-    static constexpr int MIN_PLANETS = 3;
-    static constexpr int MAX_PLANETS = 4;
+    typedef std::vector<std::unique_ptr<Planet>> Planets;
+    typedef int PlanetIndex;
+    Planets planets; //the planets in this system. The planets are expected to be ordered based on which layer they are in (a planet in a layer closer to the screen will always be before a planet closer to the sun)
+    std::vector<PlanetIndex> layers; //first indicies in "planets" that denote the beginning of a new layer. Layers are ordered based on how close they are to the screen, (smaller is closer)
+    //std::set<LayerType> layers;
+    static constexpr int MIN_PLANETS = 1;
+    static constexpr int MAX_PLANETS = 1;
     static constexpr int MIN_PLANETS_SPACE = 50;
-    void generatePlanet(const glm::vec2& center);
+    Planet& generatePlanet(const glm::vec2& center);
+    void insertPlanet(Planet& planet, int layer); //insert "planet" at the "layer"-th layer
 public:
-    void init(int num);
     void init();
     void update();
+    size_t size();
     Planet* getPlanet(int index); //returns planet at "index", null if it does not exist
     template<typename T>
     void processPlanets(T func) //pass a function that is then run on each planet. Return true if you wish to terminate early
@@ -37,7 +42,16 @@ public:
             }
         }
     }
-
+    template<typename T, typename I>
+    I foldLeftPlanets(T func, I initial) //given a function and an initial value, run it on each planet and return a value accordingly
+    {
+        //T = (Planet&, I) -> I
+        I value = initial;
+        processPlanets([&value,&func](Planet& planet){
+                       value = func(planet, value);
+                       });
+        return value;
+    }
 };
 
 #endif //STARSYSTEM_H_INCLUDED

@@ -136,6 +136,8 @@
 		<Unit filename="AI.h" />
 		<Unit filename="critter.cpp" />
 		<Unit filename="critter.h" />
+		<Unit filename="enemy.cpp" />
+		<Unit filename="enemy.h" />
 		<Unit filename="entity.cpp" />
 		<Unit filename="entity.h" />
 		<Unit filename="follower.cpp" />
@@ -157,8 +159,11 @@
 		<Unit filename="shaders/backgroundShader.h" />
 		<Unit filename="shaders/dottedFragment.h" />
 		<Unit filename="shaders/dottedVertex.h" />
+		<Unit filename="shaders/gravityFragmentShader.h" />
 		<Unit filename="shaders/gravityVertexShader.h" />
+		<Unit filename="shaders/hurtShader.h" />
 		<Unit filename="shaders/persShader.h" />
+		<Unit filename="shaders/spriteShader.h" />
 		<Unit filename="shaders/starLightShader.h" />
 		<Unit filename="starSystem.cpp" />
 		<Unit filename="starSystem.h" />

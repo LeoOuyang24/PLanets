@@ -53,6 +53,7 @@ public:
     bool getOnGround();
     Facing getFacing();
     float getMovedAmount();
+    int getLayer();
 
     void moveCenter(const glm::vec2& pos); //wrapper function for setCenter. Try to use this for setting the center unless it's for something that shouldn't be affected by physics, like spawning an entity
     glm::vec2 moveOnCircle(float dist, bool angle = false); //return the new center if entity moves "dist" amount along a surface. If "angle" is true, "dist" is treated as the amount of radians to move while standing on a planet. "angle" is ignored if not standing on anything
@@ -73,9 +74,10 @@ private:
     float movedAmount = 0; //how much we moved last frame
     glm::vec2 lastCenter = {0,0}; //center of our last frame
     Facing facing = FORWARD;
-
+    int layer = 0; //the layer we are currently on.
     float getTiltGivenPlanet(Planet& planet); //returns the tilt if standing on "planet"
     void setMovedAmount(float amount_);
+    void setLayer(int newLayer);
 
 };
 

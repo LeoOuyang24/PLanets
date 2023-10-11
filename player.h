@@ -39,7 +39,7 @@ class PlayerMoveComponent : public MoveOnPlanetComponent, public ComponentContai
 {
     float velocity = 0;
 public:
-    static constexpr int PLAYER_DIMEN = 20;
+    static constexpr int PLAYER_DIMEN = 10;
     static constexpr float PLAYER_SPEED = 1.0f;
     static constexpr float PLAYER_SPRINT_SPEED = 2.0f;
     static constexpr float PLAYER_ACCEL = 0.1f; //amount to increase in speed by every frame

@@ -76,7 +76,7 @@ void PlayerControlsComponent::update()
                         //forwardVec = {-cos(move->getTilt()), -sin(move->getTilt())};
                         //jumpVec = jumpVec + (move->getMovedAmount()/move->getBaseSpeed())*forwardVec;
                     }
-                    forces->addForce(jumpVec); //+ .5f*moveAmount*glm::normalize(glm::vec2(planetToPlayerVec.y,-planetToPlayerVec.x)));
+                    forces->addForce(0.5f*jumpVec); //+ .5f*moveAmount*glm::normalize(glm::vec2(planetToPlayerVec.y,-planetToPlayerVec.x)));
                     //onGround = false;
                 }
             }
@@ -358,6 +358,6 @@ Entity* Player::createPlayer(StarSystem& system)
     //player->addComponent(*(new RectRenderComponent(*player,glm::vec4(1,0,0,1))));
     Sprite* sprite = new Sprite("sprites/guy.png");
     //BaseAnimation anime = {2,8,1, {0,0,1,1}};
-    player->addComponent(*(new EntityAnimationComponent(*player, *sprite,1)));
+    player->addComponent(*(new EntityAnimationComponent(*player, *sprite,GAME_Z)));
     return player;
 }

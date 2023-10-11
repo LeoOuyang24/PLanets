@@ -22,10 +22,9 @@ vec4 EDGE_COLOR = vec4(0,1,1,0);*/
 void main()
 {
     float dist = length((curPos - center_)); //find the distance between interpolated pixel and center
-    float angle = atan(curPos.y - center_.y, curPos.x - center_.x) + M_PI;
+    float angle = atan(curPos.y - center_.y, curPos.x - center_.x) / M_PI * 180;
 
     float ratio = dist/(radius_*1.1);
-    float angleRatio = abs(angle)/(2*M_PI);
 
     //FragColor.g = (length(end - start))/dist;
     /*FragColor = vec4(abs(angle)/M_PI,ratio,0,1);
@@ -39,7 +38,7 @@ void main()
     }
     else
     {
-        FragColor = centerColor_ + ratio*(edgeColor_ - centerColor_);
+        FragColor = centerColor_ + (ratio)*(edgeColor_ - centerColor_);
 
     }
 
