@@ -5,6 +5,7 @@
 #include "render.h"
 #include "SDLHelper.h"
 #include "FreeTypeHelper.h"
+#include "resourcesMaster.h"
 
 #include "planet.h"
 #include "player.h"
@@ -23,6 +24,8 @@ int main(int args, char* argsc[])
     const int screenHeight = 640;
 
     srand(time(NULL));
+
+    ResourcesConfig::loadConfig();
 
     SDL_Init(SDL_INIT_VIDEO);
 
@@ -49,16 +52,8 @@ int main(int args, char* argsc[])
         //std::cout << tree.count() << std::endl;
 
     PlanetSprites.init();
-
-
-    //Planet earth = {{500,screenHeight},200};
-    //earth.sprite = 0;//"./planets/grassPlanet.png";
-    //Player player;
-    //player.standingOn = solar.getPlanet(0);
-    //if (player.standingOn)
-    //player.rect = {player.standingOn->center.x,player.standingOn->center.y - player.standingOn->radius,20,20};
-
     Game::init();
+
 //REFACTOR: Make it so functions that need solar system just get it from Game rather than getting it passed in.
 
 
@@ -97,16 +92,26 @@ int main(int args, char* argsc[])
     solarian->addComponent(*(new SolarianRenderComponent(*solarian)));*/
     //BaseAnimationComponent comp(rabbit,anime);
 
+    /*Sprite rocket("sprites/rocket.png");
+    Entity* launchpad = new Entity();
+    launchpad->addComponent(*(new MoveOnPlanetComponent(*Game::getSolar().getPlanet(0),{50,50},{},*launchpad)));
+    launchpad->addComponent(*(new EntityAnimationComponent(*launchpad,rocket)));
+    Planet* lastPlanet = Game::getSolar().getPlanet(Game::getSolar().size() - 1);
+    launchpad->addComponent(*(new LaunchComponent(3,0,*launchpad)));*/
+
+
     //Game::getManager().addEntity(*rabbit);
     //Game::getManager().addEntity(*solarian);
     //Game::getManager().addEntity(*spitter);
+    //Game::getManager().addEntity(*launchpad);
 
     Sprite background;
     background.init("sprites/blueplanet.png");
     RenderCamera camera;
-    ViewPort::setZRange(0.1f,CAMERA_Z);
+    ViewPort::setZRange((CAMERA_Z - GAME_Z)/2,CAMERA_Z);
     camera.init({0,0,CAMERA_Z});
     Sprite bunny("sprites/bunny.png");
+
 
     ViewPort::currentCamera = &camera;
     ViewPort::flipProj();
@@ -123,13 +128,19 @@ int main(int args, char* argsc[])
 
     //Planet::outlineProgram.init("../../resources/shaders/vertex/betterShader.h","../../resources/shaders/fragment/outlineShader.h",{4,1,1,1});
     SDL_ShowCursor(SDL_DISABLE);
-    BasicRenderPipeline starLight;
-    starLight.init("./shaders/gravityVertexShader.h","./shaders/starLightShader.h",{3,1,4,4});
+    BasicRenderPipeline starLight("./shaders/gravityVertexShader.h","./shaders/starLightShader.h");
 
-    BasicRenderPipeline stars;
-    stars.init("./shaders/gravityVertexShader.h","./shaders/starShader.h",{3,1,4,4});
+    BasicRenderPipeline stars({LoadShaderInfo{"./shaders/gravityVertexShader.h",GL_VERTEX_SHADER,true},{"./shaders/starShader.h",GL_FRAGMENT_SHADER,true}});
+    //BasicRenderPipeline stars("./shaders/gravityVertexShader.h","./shaders/starShader.h");
+    //stars.init("./shaders/gravityVertexShader.h","./shaders/starShader.h");
+
+    //stars.init();
+
+    //RenderProgram balls("./shaders/distanceVertexShader.h","./shaders/distanceFragmentShader.h");
 
     glDisable(GL_DEPTH_TEST);
+
+//    LaunchComponent::FlyingDebris.init();
 
     while (!quit)
     {
@@ -152,7 +163,8 @@ int main(int args, char* argsc[])
 
         //glDepthMask(false);
        //backgroundProgram.draw(GL_TRIANGLES,camera.getCenter());
-        camera.setPos(Game::getPlayer().getComponent<RectComponent>()->getCenter());
+        MoveOnPlanetComponent* moveOnPlanet = Game::getPlayer().getComponent<MoveOnPlanetComponent>();
+        camera.setPos(glm::vec3(moveOnPlanet->getCenter(),CAMERA_Z - GAME_Z + StarSystem::getPlanetZGivenLayer(moveOnPlanet->getLayer())));
 
         Game::update();
 
@@ -161,16 +173,12 @@ int main(int args, char* argsc[])
         //PolyRender::requestRect({0,0,100,100},{1,0,0,1},true,0,1);
         //SpriteManager::request(background,ViewPort::basicProgram,{{0,0,1000,1000},FAR_Z});
         //
-        stars.draw(GL_TRIANGLES,glm::vec3(500,500,FAR_Z+1),500.0f,glm::vec4(1,1,1,1),glm::vec4(0,1,1,0));
-        starLight.draw(GL_TRIANGLES,glm::vec3(500,500,FAR_Z),500.0f,glm::vec4(1,1,1,1),glm::vec4(0,1,1,0));
-        //camera.recenter({player.rect.x + player.rect.z/2,player.rect.y + player.rect.a/2});
-        //camera.recenter({screenWidth,screenHeight});
-        //printRect(camera.getRect());
-        //float fuelHeight = player.fuel/100.0*100;
-        //PolyRender::requestRect(camera.toWorld({10,screenHeight - fuelHeight - 10,30,fuelHeight}),{1,0,0,1},true,0,1);
-        //PolyRender::requestRect({0,0,screenWidth*5,screenHeight*5},{0,0,0,.2},true,0,0);
+
+        stars.draw(GL_TRIANGLES,glm::vec3(500,500,camera.getPos().z + FAR_Z - CAMERA_Z +1),500.0f,glm::vec4(1,1,1,1),glm::vec4(0,1,1,0));
+        starLight.draw(GL_TRIANGLES,glm::vec3(500,500,FAR_Z),1000.0f,glm::vec4(1,1,1,1),glm::vec4(0,1,1,0));
 
         ViewPort::update();
+        SequenceManager::run();
         SpriteManager::render();
         PolyRender::render();
         //Font::tnr.write(Font::wordProgram,convert(DeltaTime::deltaTime),0,320,0,1,{0,0,0});

@@ -69,69 +69,6 @@
 			<Add directory="../../SDLstuff/SDL2-2.0.8/x86_64-w64-mingw32/lib" />
 			<Add directory="../../glew-2.0.0/lib" />
 		</Linker>
-		<Unit filename="../../resources/FreeTypeHelper.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="../../resources/SDLhelper.cpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="../../resources/SDLhelper.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="../../resources/components.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="../../resources/geometry.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="../../resources/glGame.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="../../resources/glInterface.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="../../resources/render.cpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="../../resources/render.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="../../resources/shaders/fragment/fragmentShader.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="../../resources/shaders/fragment/outlineShader.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="../../resources/shaders/fragment/paintShader.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="../../resources/shaders/fragment/simpleFragment.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="../../resources/shaders/fragment/wordFragment.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="../../resources/shaders/vertex/polygonVertex.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="../../resources/shaders/vertex/simpleVertex.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="../../resources/shaders/vertex/vertexShader.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="../../resources/shaders/vertex/wordVertex.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="../../resources/stb_image.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="../../resources/vanilla.cpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="../../resources/vanilla.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
 		<Unit filename="AI.cpp" />
 		<Unit filename="AI.h" />
 		<Unit filename="critter.cpp" />
@@ -157,6 +94,7 @@
 		<Unit filename="shaders.cpp" />
 		<Unit filename="shaders.h" />
 		<Unit filename="shaders/backgroundShader.h" />
+		<Unit filename="shaders/distanceFragmentShader.h" />
 		<Unit filename="shaders/dottedFragment.h" />
 		<Unit filename="shaders/dottedVertex.h" />
 		<Unit filename="shaders/gravityFragmentShader.h" />
@@ -165,6 +103,7 @@
 		<Unit filename="shaders/persShader.h" />
 		<Unit filename="shaders/spriteShader.h" />
 		<Unit filename="shaders/starLightShader.h" />
+		<Unit filename="shaders/starShader.h" />
 		<Unit filename="starSystem.cpp" />
 		<Unit filename="starSystem.h" />
 		<Extensions>

@@ -1,10 +1,10 @@
 #include "shaders.h"
 
 
- BackgroundProgram::BackgroundProgram() : RenderProgram("./shaders/backgroundShader.h","../../resources/shaders/fragment/blurShader.h",{})
+ BackgroundProgram::BackgroundProgram() : RenderProgram("./shaders/backgroundShader.h","../../resources/shaders/fragment/blurShader.h")
 {
 
-    program.dataAmount = ViewPort::basicProgram.getRequestDataAmount(); //still need data to pass to the basic shader, although our own program doesn't need any additional data
+    dataAmount = ViewPort::basicProgram->getRequestDataAmount(); //still need data to pass to the basic shader, although our own program doesn't need any additional data
 
     glGenFramebuffers(1,&fbo); //create frame buffer
 
@@ -44,7 +44,7 @@ void BackgroundProgram::draw(Buffer sprite, void* data, int instances)
     glBindFramebuffer(GL_FRAMEBUFFER,0);
 
 
-    ViewPort::basicProgram.draw(texture,data,instances);
+    ViewPort::basicProgram->draw(texture,data,instances);
     //RenderProgram::draw(sprite,0,1);
 
 

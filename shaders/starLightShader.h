@@ -1,6 +1,6 @@
 #version 330 core
 
-//shader for the gravity field of planets
+//shader for the gravity field of planets and star background
 //used with gravityVertexShader
 
 #define M_PI 3.1415926535897932384626433832795

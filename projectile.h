@@ -14,8 +14,8 @@ struct ProjectileDeathComponent : public DeadComponent, ComponentContainer<Proje
             if (RectComponent* rect = entity->getComponent<RectComponent>())
             {
                 bool val = false;
-                Game::getSolar().processPlanets([&val,rect](Planet& planet){
-                                                if (pointDistance(rect->getCenter(),planet.center) <= planet.radius)
+                Game::getSolar().processPlanets([&val,rect](PlanetPtr& planet){
+                                                if (pointDistance(rect->getCenter(),planet->center) <= planet->radius)
                                                 {
                                                     val = true;
                                                     return true;

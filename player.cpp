@@ -5,6 +5,33 @@
 #include "game.h"
 #include "projectile.h"
 
+PlayerForcesComponent::PlayerForcesComponent(Entity& player) : GravityForcesComponent(player), ComponentContainer<PlayerForcesComponent>(player)
+{
+
+}
+
+float PlayerForcesComponent::getFriction()
+{
+        return GravityForcesComponent::getFriction();
+}
+
+void PlayerForcesComponent::update()
+{
+    //Force oldForce =
+    if (entity)
+    if (PlayerMoveComponent* move = entity->getComponent<PlayerMoveComponent>())
+    if (move->getLatchedTo())
+    {
+        for_each(forces.begin(), forces.end(), [this](const std::pair<ForceSource,Force>& f){ //if we are latched to a planet, clear all forces except our own velocity
+                 if (f.first != SELF)
+                 {
+                     applyFriction(0,f.first);
+                 }
+                 });
+    }
+    GravityForcesComponent::update();
+}
+
 PlayerControlsComponent::PlayerControlsComponent(Entity& player) : Component(player), ComponentContainer<PlayerControlsComponent>(player)
 {
 
@@ -18,9 +45,9 @@ bool PlayerControlsComponent::getMovedLastFrame()
 void PlayerControlsComponent::update()
 {
     PlayerMoveComponent* move = entity->getComponent<PlayerMoveComponent>();
-    GravityForcesComponent* forces = entity->getComponent<GravityForcesComponent>();
+    PlayerForcesComponent* forces = entity->getComponent<PlayerForcesComponent>();
     glm::vec2 mousePos = ViewPort::toWorld(pairtoVec(MouseManager::getMousePos()));
-
+    PolyRender::requestCircle({1,0,0,1},mousePos,10,1,Game::getSolar().getZGivenLayer(move->getLayer()));
     if (move)
     {
         if (MouseManager::getJustClicked() == SDL_BUTTON_LEFT)
@@ -34,6 +61,35 @@ void PlayerControlsComponent::update()
             bullet->getComponent<GravityForcesComponent>()->addForce(shootForce);
             Game::getManager().addEntity(*bullet,move->getCenter().x,move->getCenter().y);
         }
+        else if (forces)
+        {
+            if (MouseManager::isPressed(SDL_BUTTON_RIGHT))
+            {
+                if (!move->getOnGround())
+                {
+                    Game::getSolar().processPlanets([mousePos, move](std::shared_ptr<Planet>& planet){
+                                                    //PolyRender::requestCircle({1,0,0,1},planet->center,10,1,Game::getSolar().getZGivenLayer(planet->layer));
+                                                    if (pointDistance(mousePos,planet->center) <= planet->radius)
+                                                    {
+                                                        move->setLatchedTo(planet);
+                                                        return true;
+                                                    }
+                                                    else
+                                                    {
+                                                        //std::cout << pointDistance(mousePos,planet->center) << " " <<  planet->radius << "\n";
+                                                    }
+                                                    return false;
+                                                    },move->getLayer());
+                    //forces->setRotating(true);
+                }
+            }
+            else
+            {
+                //forces->setRotating(false);
+                move->setLatchedTo(PlanetPtr());
+            }
+        }
+
         PlayerHealthComponent* health = entity->getComponent<PlayerHealthComponent>();
         bool AIsPressed = KeyManager::isPressed(SDLK_a);
         bool DIsPressed = KeyManager::isPressed(SDLK_d);
@@ -47,23 +103,32 @@ void PlayerControlsComponent::update()
         }
         if (!health->getFallingBack())
         {
+            //std::cout << "VEL: " << move->getVelocity() << "\n";
             bool moveLeftOrRight = (AIsPressed || DIsPressed);
-            if (moveLeftOrRight)
+            if (move->getLatchedTo())
             {
-                move->setSpeed(KeyManager::isPressed(SDLK_LCTRL) ? PlayerMoveComponent::PLAYER_SPRINT_SPEED : PlayerMoveComponent::PLAYER_SPEED);
-                move->accel(DIsPressed); //move clockwise if D is pressed, otherwise move counter clockwise //sprint if sprinting
-                if (EntityAnimationComponent* comp = entity->getComponent<EntityAnimationComponent>())
-                {
-                    comp->setAnimation({{0,0,1,0.5},8,1,16});
-                }
+                //move->accel(move->getFacing() == FORWARD);
             }
             else
             {
-                if (EntityAnimationComponent* comp = entity->getComponent<EntityAnimationComponent>())
+                if (moveLeftOrRight)
                 {
-                    comp->setAnimation({{0,0,.125,0.5}});
+                    move->setSpeed(KeyManager::isPressed(SDLK_LCTRL) ? PlayerMoveComponent::PLAYER_SPRINT_SPEED : PlayerMoveComponent::PLAYER_SPEED);
+                    move->accel(DIsPressed); //move clockwise if D is pressed, otherwise move counter clockwise //sprint if sprinting
+                    if (EntityAnimationComponent* comp = entity->getComponent<EntityAnimationComponent>())
+                    {
+                        comp->setAnimation({{0,0,1,0.5},8,1,16});
+                    }
+                }
+                else
+                {
+                    if (EntityAnimationComponent* comp = entity->getComponent<EntityAnimationComponent>())
+                    {
+                        comp->setAnimation({{0,0,.125,0.5}});
+                    }
                 }
             }
+
 
             if (KeyManager::getJustPressed() == SDLK_SPACE)
             {
@@ -76,7 +141,10 @@ void PlayerControlsComponent::update()
                         //forwardVec = {-cos(move->getTilt()), -sin(move->getTilt())};
                         //jumpVec = jumpVec + (move->getMovedAmount()/move->getBaseSpeed())*forwardVec;
                     }
-                    forces->addForce(0.5f*jumpVec); //+ .5f*moveAmount*glm::normalize(glm::vec2(planetToPlayerVec.y,-planetToPlayerVec.x)));
+                    //std::cout << "JUMP: " << glm::length(0.75f*jumpVec) << "\n";
+                    forces->addForce(0.75f*jumpVec,JUMP); //+ .5f*moveAmount*glm::normalize(glm::vec2(planetToPlayerVec.y,-planetToPlayerVec.x)));
+                     //   std::cout << glm::length(0.75f*jumpVec) << " " << glm::length(forces->getForce(JUMP))<< "\n";
+
                     //onGround = false;
                 }
             }
@@ -86,7 +154,7 @@ void PlayerControlsComponent::update()
                 {
                     float tilt = atan2(mousePos.y - move->getCenter().y, mousePos.x - move->getCenter().x);
                     move->setTilt(tilt);
-                    forces->addForce(0.1f*ForceVector(cos(tilt),sin(tilt)));
+                    forces->addForce(0.1f*ForceVector(cos(tilt),sin(tilt)), JUMP);
                     fuel = std::max(0,fuel - 1);
                 }
             }
@@ -105,14 +173,27 @@ void PlayerControlsComponent::update()
     }
 }
 
-void PlayerControlsComponent::setMovedLastFrame(bool moved_)
-{
-    movedLastFrame = moved_;
-}
-
 PlayerMoveComponent::PlayerMoveComponent(Entity& player) : MoveOnPlanetComponent({0,0,PLAYER_DIMEN,PLAYER_DIMEN},{PLAYER_DIMEN,PLAYER_ACCEL,PLAYER_DECEL,PLAYER_IN_AIR_ACCEL},player), ComponentContainer<PlayerMoveComponent>(player)
 {
 
+}
+
+void PlayerMoveComponent::setLatchedTo(const std::shared_ptr<Planet>& planet)
+{
+    if (latchedTo.lock().get() != planet.get())
+    {
+        latchedTo = planet;
+        if (planet.get())
+        {
+            setStandingOn(planet.get());
+            latchedVelocity = getVelocity();
+        }
+    }
+}
+
+Planet* PlayerMoveComponent::getLatchedTo()
+{
+    return latchedTo.lock().get();
 }
 
 void PlayerMoveComponent::setStandingOn(Planet* planet)
@@ -123,8 +204,7 @@ void PlayerMoveComponent::setStandingOn(Planet* planet)
     {
         if (abs(oldTilt - tilt) >= M_PI)
         {
-            velocity *= -1;
-
+            //velocity *= -1;
         }
     }
 }
@@ -134,7 +214,18 @@ void PlayerMoveComponent::update()
 {
     //moveCenter(moveOnCircle(velocity));
     //setFacing(velocity > 0 ? FORWARD : BACKWARD);
+    if (getOnGround())
+    {
+        setLatchedTo(PlanetPtr());
+    }
+    else if (auto latched = latchedTo.lock().get())
+    {
+        PolyRender::requestLine(glm::vec4(getCenter(),latched->center),{0,1,1,1},StarSystem::getPlanetZGivenLayer(getLayer()));
+        setVelocity(latchedVelocity);
+    }
     MoveOnPlanetComponent::update();
+    //std::cout << latchedVelocity << " " << getVelocity() << "\n";
+
 }
 
 PlayerHealthComponent::PlayerHealthComponent(Entity& player) : BaseHealthComponent(1000,PlayerHealthComponent::PLAYER_MAX_HEALTH,PlayerHealthComponent::PLAYER_MAX_HEALTH,player), ComponentContainer<PlayerHealthComponent>(player)
@@ -196,155 +287,38 @@ bool PlayerHealthComponent::getFallingBack()
 }
 
 
-void Player::update(StarSystem& system, RenderCamera& camera)
+PlayerAnimationComponent::PlayerAnimationComponent(Entity& entity, Sprite& sprite) : EntityAnimationComponent(entity, sprite),
+                                                                                     weightlessOutline({
+                                                                                                       {
+                                                                                                       templateShader(readFile("./shaders/spriteShader.h").first,true,{"vec4 shade"},{"vec4 tint"},{"tint = shade"})
+                                                                                                       ,GL_VERTEX_SHADER,false
+                                                                                                       },
+                                                                                                       LoadShaderInfo{"shaders/paintShader.h",GL_FRAGMENT_SHADER}})
 {
-    glm::vec2 center = glm::vec2(rect.x + rect.z/2, rect.y + rect.a/2);
-    if (standingOn)
+
+}
+
+void PlayerAnimationComponent::update()
+{
+    //EntityAnimationComponent::update();
+    if (GravityForcesComponent* forces = entity->getComponent<GravityForcesComponent>())
+    if (MoveOnPlanetComponent* rect = entity->getComponent<MoveOnPlanetComponent>())
+    if (BaseHealthComponent* health = entity->getComponent<BaseHealthComponent>())
+    if (forces->getWeightless())
     {
-        glm::vec2 planetToPlayerVec = {standingOn->center.x - center.x,standingOn->center.y - center.y};
-        angle = atan2(planetToPlayerVec.y,planetToPlayerVec.x);
-        glm::vec2 moveVec = glm::vec2(0);
-        float moveAmount = 0;
-        onGround = pointDistance(center,standingOn->center) <= standingOn->radius;
-
-        if (KeyManager::isPressed(SDLK_a) || KeyManager::isPressed(SDLK_d))
-        {
-            //if (onGround || !airMoved)
-            {
-                moveAmount += (1 - KeyManager::isPressed(SDLK_a) * 2 )*speed*(.3*onGround + .7);
-            }
-            if (onGround)
-            {
-                float baseWidth = 10;
-                float baseHeight = 2;
-                int amount= 5;
-                int dimen = 5;
-                for (int i = 0; i < amount;i ++)
-                {
-                    int duration = 1000;
-                    int wait = i*100;
-                    int width = baseWidth + (i%2*2 - 1)*baseWidth/2;
-                    int height = baseHeight + (1 - i%2*2)*baseHeight/2;
-                    int ticks = SDL_GetTicks()%(wait + duration);
-                    if (ticks < duration)
-                    {
-                        float y = pow(ticks-duration/4,2)/(float)(pow(duration/2,2))*baseHeight;
-                        glm::vec2 origin = glm::vec2(rect.x + rect.z/(amount)*i,rect.y + rect.a - (dimen));
-                        glm::vec2 point = rotatePoint({origin.x + (i%2*2 - 1)*ticks/(float)duration*width,origin.y  + y},center,angle-M_PI/2);
-                        PolyRender::requestRect(glm::vec4(point,dimen,dimen),glm::vec4(0,1,0,1),true,0,2);
-                    }
-                }
-
-            }
-            //airMoved = true;
-        }
-        if (onGround)
-        {
-            airMoved = false;
-            if (KeyManager::getJustPressed() == SDLK_SPACE)
-            {
-                forces += -1.f*glm::normalize(planetToPlayerVec) + .5f*moveAmount*glm::normalize(glm::vec2(planetToPlayerVec.y,-planetToPlayerVec.x));
-                onGround = false;
-            }
-        }
-        float moveAngle = angle + moveAmount/(standingOn->radius);
-        //forces += moveAmount*glm::normalize(glm::vec2(planetToPlayerVec.y,-planetToPlayerVec.x));
-        float dist = std::max((float)standingOn->radius,glm::distance(glm::vec2(rect.x + rect.z/2,rect.y +rect.a/2),standingOn->center));
-        rect.x = standingOn->center.x - cos(moveAngle)*dist - rect.z/2;
-        rect.y = standingOn->center.y - sin(moveAngle)*dist - rect.a/2;
-
-
-        standingOn = glm::distance(center,standingOn->center) <= standingOn->getGravityRadius() ? standingOn : 0;
-    }
-    glm::vec2 mousePos = camera.toWorld(pairtoVec(MouseManager::getMousePos()));
-    if (KeyManager::isPressed(SDLK_LSHIFT) && fuel)
-    {
-        forces += .1f*glm::normalize(mousePos - center);
-        fuel = std::max(0,fuel - 5);
-        fuelRecharge.set();
-    }
-    if (fuelRecharge.getTimePassed() >= 2000)
-    {
-        fuel = std::min(100, fuel + 1);
-    }
-    if (forces.length() > 3)
-    {
-        forces = 3.f*glm::normalize(forces);
-    }
-    PolyRender::requestLine({center,center + 100.0f*forces},glm::vec4(1,0,0,1),1,1);
-
-    rect.x += forces.x;
-    rect.y += forces.y;
-    if (!onGround)
-    {
-        system.processPlanets([this,center](Planet& planet){
-                              if (pointDistance(center,planet.center) <= planet.radius)
-                              {
-                                  standingOn = &planet;
-                                  onGround = true;
-                              }
-                              if (pointDistance(center,planet.center) <= planet.getGravityRadius())
-                              {
-                                  glm::vec2 newForce = (planet.radius/100.0f)/(pow(planet.center.x - center.x,2.0f) + pow(planet.center.y - center.y,2.0f))*(planet.center - center);
-                                  PolyRender::requestLine(glm::vec4(center,center + 10000.0f*newForce),{0,1,(&planet == standingOn),1},1,1);
-                                  forces += newForce;
-                              }
-
-                              });
-        //forces += .01f/standingOn->radius*planetToPlayerVec;
-       forces *= .999;
+        BaseAnimationComponent::request(weightlessOutline,{rect->getRect(),StarSystem::getPlanetZGivenLayer(rect->getLayer())},
+                                        BaseAnimation::getFrameFromStart(start,anime),
+                                        rect->getTiltOnPlanet(),
+                                        rect->getFacing() == FORWARD ? NONE : MIRROR,//if we are facing backwards, mirror the sprite (this means all sprites by default need to be facing to the right
+                                        health && health->isInvuln() ? 1.0f : 0.0f,
+                                        glm::vec4(0,1,0,1)
+                                        );
     }
     else
     {
-        forces *= 0;
+        EntityAnimationComponent::update();
     }
-    PolyRender::requestRect(rect,{1,0,0,1},true,angle,1);
-    cursorUI.draw(center,mousePos);
-}
 
-CursorUI::CursorUI(std::string vertex, std::string fragment) //line,z,non-transluscent color
-{
-    program.init(vertex,fragment);
-    glBindVertexArray(program.VAO);
-
-    glBindVertexArray(0);
-    ViewPort::linkUniformBuffer(program.program);
-}
-
-void CursorUI::draw(const glm::vec2& origin, const glm::vec2& mousePos)
-{
-    glm::vec4 points = glm::vec4(origin,mousePos);
-    std::vector<float> nums;
-    nums.push_back(origin.x);
-    nums.push_back(origin.y);
-
-    /*nums.push_back(mousePos.x);
-    nums.push_back(origin.y);
-
-    nums.push_back(origin.x);
-    nums.push_back(mousePos.y);*/
-
-    nums.push_back(mousePos.x);
-    nums.push_back(mousePos.y);
-
-
-    glBindVertexArray(program.VAO);
-    glBindBuffer(GL_ARRAY_BUFFER,program.VBO);
-    glVertexAttribPointer(0,2,GL_FLOAT,GL_FALSE,0,(void*)0);
-    glEnableVertexAttribArray(0);
-    glBufferData(GL_ARRAY_BUFFER,sizeof(float)*nums.size(),&nums[0],GL_DYNAMIC_DRAW);
-    glUseProgram(program.program);
-
-    glUniform2f(glGetUniformLocation(program.program,"screenDimen"),ViewPort::screenWidth,ViewPort::screenHeight);
-
-    glLineWidth(3.0);
-
-    glDrawArrays(GL_LINES,0,nums.size()/2);
-    glLineWidth(1.0);
-    glBindVertexArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER,0);
-
-    PolyRender::requestCircle({1,0,0,1},mousePos,10,false,1);
 }
 
 Entity* Player::createPlayer(StarSystem& system)
@@ -353,11 +327,11 @@ Entity* Player::createPlayer(StarSystem& system)
     player->addComponent(*(new PlayerControlsComponent(*player)));
     player->addComponent(*(new PlayerMoveComponent(*player)));
     //player->addComponent(*(new MoveOnPlanetComponent(*system.getPlanet(0),{20,30},1,*player)));
-    player->addComponent(*(new GravityForcesComponent(*player)));
+    player->addComponent(*(new PlayerForcesComponent(*player)));
     player->addComponent(*(new PlayerHealthComponent(*player)));
     //player->addComponent(*(new RectRenderComponent(*player,glm::vec4(1,0,0,1))));
     Sprite* sprite = new Sprite("sprites/guy.png");
     //BaseAnimation anime = {2,8,1, {0,0,1,1}};
-    player->addComponent(*(new EntityAnimationComponent(*player, *sprite,GAME_Z)));
+    player->addComponent(*(new PlayerAnimationComponent(*player, *sprite)));
     return player;
 }

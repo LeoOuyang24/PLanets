@@ -37,7 +37,12 @@ struct MovePhysicsConstants
 
 class MoveOnPlanetComponent : public BasicMoveComponent, public ComponentContainer<MoveOnPlanetComponent>
 {
-    //for moving along planets in a non-force related manner, such as walking along the surface.
+    //for moving along planets and hitboxes
+    //MoveOnPlanetComponent operates by taking control of a forcesource in GravityForcesComponent called SELF
+    //Any friction/modifications done forces stemming from SELF should be done exclusively by MoveOnPlanetComponent and its descendants.
+    //For example, GravityForcesComponent will apply friction to SELF force but this gets overwritten by MoveOnPlanetComponent's update function.
+    //I don't love this implementation; it's kind of sphagetti. Why is another class controlling another class's member variable? This will probably be changed
+    //in the future to be separate from the other forces in GravityForcesComponent
 public:
     MoveOnPlanetComponent(const glm::vec4& rect_, const MovePhysicsConstants& constants, Entity& entity);
     MoveOnPlanetComponent(Planet& planet, const glm::vec2& dimen, const MovePhysicsConstants& constants, Entity& entity);
@@ -45,22 +50,24 @@ public:
     virtual void setStandingOn(Planet* planet);
     void setFacing(Facing dir);
     void setSpeed(float speed);
+    void setLayer(int newLayer);
 
     Planet* getStandingOn();
     float getSpeed();
-    float getBaseSpeed();
-    float getTilt() const;
+    float getVelocity();
+    void setVelocity(float vel);
+
+    float getTiltOnPlanet() const; //adds 90 degrees to tilt so standing on top of a planet is at degrees 0
     bool getOnGround();
     Facing getFacing();
-    float getMovedAmount();
+    glm::vec2 getMoveVector(); //get the amount we moved in the x-y directions
     int getLayer();
 
     void moveCenter(const glm::vec2& pos); //wrapper function for setCenter. Try to use this for setting the center unless it's for something that shouldn't be affected by physics, like spawning an entity
     glm::vec2 moveOnCircle(float dist, bool angle = false); //return the new center if entity moves "dist" amount along a surface. If "angle" is true, "dist" is treated as the amount of radians to move while standing on a planet. "angle" is ignored if not standing on anything
     glm::vec2 moveOnCircle(const glm::vec2& target); //returns next center point to move to, which is either "speed" away or the target
 
-    void accel(float amount); //increase "velocity" by "amount" up to "speed"
-    void accel(bool accelerate = true); //increase "velocity" by "accelerate" if "accelerate is true, otherwise decrease
+    void accel(bool accelerate = true); //increase "velocity" by "constants.accel" if "accelerate" is true, otherwise decrease
     void accelMult(float amount); //multiply "velocity" by "amount". Usually used to decelerate
 
     void update();
@@ -68,29 +75,46 @@ private:
     float velocity = 0;
     float oldVelocity = 0;
     MovePhysicsConstants constants;
-    float baseSpeed = MovePhysicsConstants::BASE_SPEED;
     bool onGround= true;
     Planet* standingOn = 0;
-    float movedAmount = 0; //how much we moved last frame
     glm::vec2 lastCenter = {0,0}; //center of our last frame
     Facing facing = FORWARD;
     int layer = 0; //the layer we are currently on.
     float getTiltGivenPlanet(Planet& planet); //returns the tilt if standing on "planet"
     void setMovedAmount(float amount_);
-    void setLayer(int newLayer);
-
 };
 
-class GravityForcesComponent : public ForcesComponent, public ComponentContainer<GravityForcesComponent>
+enum ForceSource //possible sources of a force
+{
+    SELF,
+    JUMP,
+    GRAVITY, //force from gravitational pull
+    MISC     //pretty much anything else
+};
+
+typedef glm::vec2 Force;
+
+class GravityForcesComponent : public Component, public ComponentContainer<GravityForcesComponent>
 {
     //used for gravity physics. An entity with this component will be affected by the gravitational pull of planets
+protected:
+    bool weightless = false; //true if unaffected by gravity
+    std::unordered_map<ForceSource,Force> forces;
 public:
     constexpr static float GROUND_FRICTION = 0.8f;
     GravityForcesComponent(Entity& player);
+    void addForce(const glm::vec2& force, ForceSource source = MISC); //adds "force" to the force in "forces". If the source has not been added yet, create it
+    void setForce(const glm::vec2& force, ForceSource source = MISC);
+    void applyFriction(float friction, ForceSource source = MISC);
+    void applyFrictionAll(float friction); //apply friction to ALL forces
+    Force getForce(ForceSource source = MISC); //get the force from the corresponding force, or {0,0} if non existent
+    Force getTotalForce(); //accumulates all our forces
     void update();
+
     glm::vec2 getJumpVector(float mag, Planet* planet); //returns the force needed to jump if standing on "planet". "mag" is the magnitude of the vector
-    void setForce(const ForceVector& vec); //sets final Force equal to vec
-    float getFriction(); //returns either 'friction' or 'GROUND_FICTION', based on whether or not on ground or not
+    virtual float getFriction(); //returns either 'friction' or 'GROUND_FICTION', based on whether or not on ground or not
+    void setWeightless(bool weightless_);
+    bool getWeightless();
 };
 
 class BasicSpriteComponent : public RenderComponent, public ComponentContainer<BasicSpriteComponent>
@@ -109,7 +133,7 @@ class EntityAnimationComponent : public BaseAnimationComponent, public Component
     RenderEffect effect = NONE;
     glm::vec4 tint = {0,0,0,0};
 public:
-    EntityAnimationComponent(Entity&, Sprite& spriteSheet, ZType zPos = 0, const BaseAnimation& anime = {});
+    EntityAnimationComponent(Entity&, Sprite& spriteSheet,const BaseAnimation& anime = {});
     /*template<typename... T>
     void request(RenderProgram& program, const FullPosition& pos, T... stuff)
     {

@@ -7,19 +7,12 @@
 #include "starSystem.h"
 #include "entity.h"
 
-class CursorUI
-{
-    BasicRenderPipeline program;
-public:
-    CursorUI(std::string vertex = "./shaders/dottedVertex.h", std::string fragment = "./shaders/dottedFragment.h");
-    void draw(const glm::vec2& origin, const glm::vec2& mousePos);
-};
-
 class PlayerForcesComponent : public GravityForcesComponent, public ComponentContainer<PlayerForcesComponent>
 {
-    ForceVector moveForce = {0,0}; //force that moves the player
 public:
     PlayerForcesComponent(Entity& player);
+    float getFriction();
+    void update();
 };
 
 class PlayerControlsComponent : public Component, public ComponentContainer<PlayerControlsComponent>
@@ -37,16 +30,19 @@ protected:
 
 class PlayerMoveComponent : public MoveOnPlanetComponent, public ComponentContainer<PlayerMoveComponent>
 {
-    float velocity = 0;
+    float latchedVelocity = 0; //velocity when we latched onto a planet
+    std::weak_ptr<Planet> latchedTo;
 public:
     static constexpr int PLAYER_DIMEN = 10;
     static constexpr float PLAYER_SPEED = 1.0f;
     static constexpr float PLAYER_SPRINT_SPEED = 2.0f;
     static constexpr float PLAYER_ACCEL = 0.1f; //amount to increase in speed by every frame
     static constexpr float PLAYER_DECEL = 0.9f; //%of speed remaining after decelerating
-    static constexpr float PLAYER_IN_AIR_ACCEL = 0.1f; //acceleration if we are in the air
+    static constexpr float PLAYER_IN_AIR_ACCEL = 0.01f; //acceleration if we are in the air
     PlayerMoveComponent(Entity& player);
     void setStandingOn(Planet* planet);
+    void setLatchedTo(const std::shared_ptr<Planet>& planet);
+    Planet* getLatchedTo();
     void update();
 };
 
@@ -61,6 +57,13 @@ public:
     bool getFallingBack();
 };
 
+class PlayerAnimationComponent : public EntityAnimationComponent
+{
+   RenderProgram weightlessOutline;
+public:
+    PlayerAnimationComponent(Entity& entity, Sprite& sprite);
+    void update();
+};
 
 struct Player
 {
@@ -74,8 +77,6 @@ struct Player
     float baseSpeed = 1;
     glm::vec4 rect;
     float angle;
-    CursorUI cursorUI;
-    void update(StarSystem& system, RenderCamera& camera);
     static Entity* createPlayer(StarSystem& system);
 };
 

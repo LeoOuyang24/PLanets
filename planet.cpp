@@ -3,7 +3,7 @@
 #include "planet.h"
 #include "game.h"
 
-RenderProgram Planet::outlineProgram;
+std::unique_ptr<RenderProgram> Planet::outlineProgram;
 const glm::vec4 Planet::CENTER_GRAVITY_COLOR = {1,1,1,1};
 const glm::vec4 Planet::EDGE_GRAVITY_COLOR = {0,1,1,0};
 
@@ -20,14 +20,15 @@ glm::vec2 Planet::getPlanetSurfacePoint(float tilt, const glm::vec4& rect)
 
 void Planet::render()
 {
-    SpriteManager::request(PlanetSpriteManager::PlanetSprites.getSprite(sprite),PlanetSpriteManager::PlanetShader,{glm::vec4(center - glm::vec2(radius,radius),radius*2,radius*2),PLANET_Z + z});
+    SpriteManager::request(PlanetSpriteManager::PlanetSprites.getSprite(sprite),*PlanetSpriteManager::PlanetShader,{glm::vec4(center - glm::vec2(radius,radius),radius*2,radius*2),
+                           StarSystem::getPlanetZGivenLayer(layer)});
     //PolyRender::requestCircle({0,1,1,1},center,getGravityRadius(),false,PLANET_Z + z);
    //PolyRender::requestNGon(10,center,radius,{1,1,1,1},0,true,1,1);
 }
 
 void Planet::renderGravityField()
 {
-    PlanetSpriteManager::GravityFieldRender.draw(GL_TRIANGLES,glm::vec3(center,PLANET_Z + z),getGravityRadius(),CENTER_GRAVITY_COLOR,EDGE_GRAVITY_COLOR);
+    PlanetSpriteManager::GravityFieldRender->draw(GL_TRIANGLES,glm::vec3(center,StarSystem::getPlanetZGivenLayer(layer)),getGravityRadius(),CENTER_GRAVITY_COLOR,EDGE_GRAVITY_COLOR);
 }
 
 float Planet::getGravityRadius()
@@ -36,8 +37,8 @@ float Planet::getGravityRadius()
 }
 
 PlanetSpriteManager PlanetSpriteManager::PlanetSprites;
-BasicRenderPipeline PlanetSpriteManager::GravityFieldRender;
-RenderProgram PlanetSpriteManager::PlanetShader;
+std::unique_ptr<BasicRenderPipeline> PlanetSpriteManager::GravityFieldRender;
+std::unique_ptr<RenderProgram> PlanetSpriteManager::PlanetShader;
 
 const std::string PlanetSpriteManager::SpritesDirectory = "./planets/";
 const std::string PlanetSpriteManager::ErrorMSG = "./sprites/errorMSG.png";
@@ -60,9 +61,9 @@ void PlanetSpriteManager::init()
     }
     errorMessage.load(ErrorMSG);
 
-    GravityFieldRender.init("./shaders/gravityVertexShader.h","./shaders/gravityFragmentShader.h",{3,1,4,4});
-    PlanetShader.init("./shaders/distanceVertexShader.h","./shaders/distanceFragmentShader.h",{4,1,1,1});
-    PlanetShader.use();
+    GravityFieldRender = std::make_unique<BasicRenderPipeline>("./shaders/gravityVertexShader.h","./shaders/gravityFragmentShader.h");
+    PlanetShader = std::make_unique<RenderProgram>("./shaders/distanceVertexShader.h","./shaders/distanceFragmentShader.h");
+    PlanetShader->use();
     glUniform1i(0,GAME_Z);
 }
 

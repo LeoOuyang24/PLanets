@@ -1,3 +1,5 @@
+#include "resourcesMaster.h"
+
 #include "game.h"
 #include "entity.h"
 #include "player.h"
@@ -16,7 +18,10 @@ bool GameEntitiesManager::forEachEntity(Entity& it)
 
 void Shaders::init()
 {
-    SpriteProgram.init("shaders/spriteShader.h","shaders/hurtShader.h",{4,1,4,1,1,1});
+    SpriteProgram = std::make_unique<RenderProgram>("shaders/spriteShader.h","shaders/hurtShader.h");
+    //SpriteProgram->use();
+    //    glUniform1i(0,GAME_Z);
+
 }
 
 GameEntitiesManager Game::manager;

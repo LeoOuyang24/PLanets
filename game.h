@@ -15,7 +15,7 @@ class GameEntitiesManager : public EntityPosManager
 
 struct Shaders
 {
-    RenderProgram SpriteProgram; //handles animations
+    std::unique_ptr<RenderProgram> SpriteProgram; //handles animations
     void init();
 };
 

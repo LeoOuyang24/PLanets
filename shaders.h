@@ -7,7 +7,7 @@ class BackgroundProgram : public RenderProgram
 {
     Buffer fbo;
     Buffer texture = 0;
-    BasicRenderPipeline PostProcess; //used for post processing
+    //BasicRenderPipeline PostProcess; //used for post processing
 public:
     BackgroundProgram();
     void draw(Buffer texture, void* data, int instances);

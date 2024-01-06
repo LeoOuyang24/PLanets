@@ -5,8 +5,10 @@
 layout (location = 0) in vec2 aPos;
 layout (location = 1) in vec3 center;
 layout (location = 2) in float radius;
-layout (location = 3) in vec4 centerColor;
+layout (location = 3) in vec4 centerColor; //asdf20943840928342
 layout (location = 4) in vec4 edgeColor;
+//layout (location = 5) in vec4 asdf;
+
 
 out vec2 curPos;
 out float radius_;
