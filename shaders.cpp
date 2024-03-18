@@ -4,7 +4,7 @@
  BackgroundProgram::BackgroundProgram() : RenderProgram("./shaders/backgroundShader.h","../../resources/shaders/fragment/blurShader.h")
 {
 
-    dataAmount = ViewPort::basicProgram->getRequestDataAmount(); //still need data to pass to the basic shader, although our own program doesn't need any additional data
+    //dataAmount = ViewPort::basicProgram->getRequestDataAmount(); //still need data to pass to the basic shader, although our own program doesn't need any additional data
 
     glGenFramebuffers(1,&fbo); //create frame buffer
 

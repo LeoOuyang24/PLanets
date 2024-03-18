@@ -55,18 +55,29 @@ MoveOnPlanetComponent::MoveOnPlanetComponent(Planet& planet, const glm::vec2& di
 void MoveOnPlanetComponent::setStandingOn(Planet* planet)
 {
     //if (entity == &Game::getPlayer() && planet && pointDistance(getCenter(),planet->center) > 500 && planet->layer == layer)
+    prevStandingOn = standingOn;
     standingOn = planet;
-    onGround = true;
+    //onGround = true;
     if (planet)
     {
-        setTilt(getTiltGivenPlanet(*planet));
         setLayer(planet->layer);
     }
+}
+
+void MoveOnPlanetComponent::teleportToPlanet(Planet& planet)
+{
+    setStandingOn(&planet);
+    setCenter(planet.center + planet.radius*glm::vec2(cos(getTilt()),sin(getTilt())));
 }
 
 Planet* MoveOnPlanetComponent::getStandingOn()
 {
     return standingOn;
+}
+
+Planet* MoveOnPlanetComponent::getPrevStandingOn()
+{
+    return prevStandingOn;
 }
 
 float MoveOnPlanetComponent::getSpeed()
@@ -87,7 +98,7 @@ void MoveOnPlanetComponent::setVelocity(float vel)
 
 float MoveOnPlanetComponent::getTiltOnPlanet() const
 {
-    return tilt + M_PI/2; //add 90 degrees so standing on top of the planet counts as "0" tilt
+    return tilt;
 }
 
 bool MoveOnPlanetComponent::getOnGround()
@@ -134,9 +145,12 @@ void MoveOnPlanetComponent::moveCenter(const glm::vec2& center)
 glm::vec2 MoveOnPlanetComponent::moveOnCircle(float dist, bool isAngle)
 {
     glm::vec2 center = getCenter();
+    GravityForcesComponent* forces = entity->getComponent<GravityForcesComponent>();
+
     if (standingOn)
+    if (entity)
     {
-        float angle = getTiltGivenPlanet(*standingOn) + dist/(isAngle ? 1 : standingOn->radius); //the angle of the new point, which is "tilt" + "dist" if "isAngle" is true or
+        float angle = getTiltGivenPlanet(*standingOn) + dist/(isAngle ? 1 : pointDistance(center,standingOn->center)); //the angle of the new point, which is "tilt" + "dist" if "isAngle" is true or
                                                                       // "dist"/"standingOn->radius" otherwise
         //PolyRender::requestCircle(glm::vec4(1,0,0,1),planetCenter + standingOn->radius*glm::vec2(cos(angle),sin(angle)),5,true,1);
         //PolyRender::requestCircle(glm::vec4(0,1,0,1),rotatePoint(center,planetCenter,dist/standingOn->radius),5,true,1);
@@ -145,8 +159,9 @@ glm::vec2 MoveOnPlanetComponent::moveOnCircle(float dist, bool isAngle)
     }
     else
     {
-        return center;//center + glm::vec2(dist,dist);
+        return center + dist*glm::vec2(cos(getTiltOnPlanet()),sin(getTiltOnPlanet()));
     }
+    return center;
 }
 
 glm::vec2 MoveOnPlanetComponent::moveOnCircle(const glm::vec2& target)
@@ -170,7 +185,10 @@ glm::vec2 MoveOnPlanetComponent::moveOnCircle(const glm::vec2& target)
 void MoveOnPlanetComponent::accel(bool accelerate)
 {
     //std::cout << (accelerate*2 - 1)*(getOnGround() ? constants.accel : constants.aerial_accel)<<"\n";
-    setVelocity(velocity + (accelerate*2 - 1)*(getOnGround() ? constants.accel : constants.aerial_accel)); //accelerate, slower in the air
+   // if (standingOn && pointDistance(getCenter(),standingOn->center) <= standingOn->getGravityRadius())
+    {
+        setVelocity(velocity + (accelerate*2 - 1)*(getOnGround() ? constants.accel : constants.aerial_accel)); //accelerate, slower in the air
+    }
 }
 
 void MoveOnPlanetComponent::accelMult(float amount)
@@ -181,19 +199,30 @@ void MoveOnPlanetComponent::accelMult(float amount)
 void MoveOnPlanetComponent::update()
 {
     glm::vec2 center = getCenter();
+    if (entity)
     if (GravityForcesComponent* forces = entity->getComponent<GravityForcesComponent>())
     {
-        forces->setForce(moveOnCircle(velocity) - center,SELF);//moveCenter(moveOnCircle(velocity)); //move based on our velocity
+        forces->setForce(moveOnCircle(velocity) - center,SELF);
+
+        //forces->addForce(moveOnCircle(convertTo1(velocity)*constants.accel) - center, SELF);
         if (velocity == oldVelocity) //if we didn't change our velocity, time to apply friction. This is usually the result of our entity not moving anymore
         {
             //std::cout << "frictining " << forces->getFriction() << "\n";
             accelMult(forces->getFriction());
         }
+        if (onGround)
+        {
+            forces->setForce({0,0},JUMP);
+        }
+        glm::vec2 selfForce = forces->getForce(SELF);
+       // setTilt(atan2(selfForce.y,selfForce.x));
     }
+
     if (standingOn)
     {
-        setTilt(getTiltGivenPlanet(*standingOn));
-        moveCenter(standingOn->getPlanetSurfacePoint(tilt,rect)); //makes sure we are never below the surface
+        //std::cout << atan2(0,1) << " " << getTiltGivenPlanet(*standingOn) << "\n";
+        //setTilt(getTiltGivenPlanet(*standingOn));
+        moveCenter(standingOn->getPlanetSurfacePoint(getTiltGivenPlanet(*standingOn),rect)); //makes sure we are never below the surface
         //PolyRender::requestLine(glm::vec4(center,standingOn->center),{0,1,1,1},1,1);
 
     }
@@ -212,6 +241,10 @@ void MoveOnPlanetComponent::update()
                   }
                     return false;
                   },layer);
+    }
+    else
+    {
+        prevStandingOn = nullptr;
     }
 
     oldVelocity = velocity;
@@ -255,11 +288,13 @@ void GravityForcesComponent::addForce(const glm::vec2& force, ForceSource source
 
 void GravityForcesComponent::setForce(const glm::vec2& force, ForceSource source)
 {
-    /*if (source == MISC && glm::length(force) < 0.01 && entity->getComponent<Ju)
-    {
-        std::cout << glm::length(force) << "\n";
-    }*/
+
     forces[source] = force;
+    if (glm::length(forces[source]) > MAX_FORCE_MAG)
+    {
+        forces[source] = MAX_FORCE_MAG*glm::normalize(forces[source]);
+    }
+
     //std::cout << glm::length(forces[source]) << "\n";
 }
 
@@ -278,6 +313,11 @@ void GravityForcesComponent::applyFrictionAll(float friction)
     {
         applyFriction(friction,it->first);
     }
+}
+
+const std::unordered_map<ForceSource,Force>& GravityForcesComponent::getAllForces()
+{
+    return forces;
 }
 
 Force GravityForcesComponent::getForce(ForceSource source)
@@ -307,7 +347,7 @@ void GravityForcesComponent::update()
         if (move) //this is important for handling "onGround"
         {
             //PolyRender::requestLine(glm::vec4(move->getCenter(), move->getCenter() + 10.0f*finalForce.force),{1,0,0,1},1,1);
-            move->moveCenter(move->getCenter() + finalForce); //apply force
+            move->moveCenter(move->getCenter() + .1f*finalForce); //apply force
             applyFrictionAll(getFriction());
         }
         else
@@ -317,14 +357,34 @@ void GravityForcesComponent::update()
         }
         if ((!move || !move->getOnGround()) && !weightless)
         {
-        Game::getSolar().processPlanets([this,center=rect->getCenter(),rect](PlanetPtr& planet){
-                          if (pointDistance(center,planet->center) <= planet->getGravityRadius())
+            glm::vec2 center = move->getCenter();
+        Game::getSolar().processPlanets([this,center,rect,move](PlanetPtr& planet){
+                          if (pointDistance(center,planet->center) <= planet->getGravityRadius() && planet.get() != move->getStandingOn() && planet.get() != move->getPrevStandingOn())
                           {
-                              glm::vec2 newForce = .0001f*(planet->radius*planet->radius)/(pow(planet->center.x - center.x,2.0f) + pow(planet->center.y - center.y,2.0f))*(planet->center - center);
-                              //PolyRender::requestLine(glm::vec4(center,center + 10000.0f*newForce),{0,1,(&planet == standingOn),1},1,1);
-                              addForce(newForce,GRAVITY);
+                              move->setStandingOn(planet.get());
+                             /* setForce(getForce(SELF),MISC);
+                            setForce({0,0},GRAVITY);*/
+                            glm::vec2 jump = getForce(JUMP);
+                            glm::vec2 self = getForce(SELF);
+                            float gravMag = glm::length(getForce(GRAVITY));
+                            applyFrictionAll(0);
+                            setForce(jump,JUMP);
+                            setForce(self,MISC);
+                            setForce(gravMag*glm::normalize(planet->center - center));
+                            move->setVelocity(0);
+
+                              return true;
+                              //inSpace = false;
                           }
+                          return false;
                           },move->getLayer());
+          if (Planet* planet = move->getStandingOn())
+          {
+             glm::vec2 newForce = .005f*(planet->radius*planet->radius)/(pow(planet->center.x - move->getCenter().x,2.0f) + pow(planet->center.y - move->getCenter().y,2.0f))*(planet->center - center);
+            addForce(newForce,GRAVITY);
+          }
+
+
         }
     }
 }
@@ -379,7 +439,7 @@ void BasicSpriteComponent::update()
     if (BasicMoveComponent* move = entity->getComponent<BasicMoveComponent>())
     {
         //PolyRender::requestRect(move->getRect(),{1,0,0,1},true,move->getTilt(),1);
-        SpriteManager::request(sprite,*ViewPort::basicProgram,{move->getRect(),1},move->getTilt());
+        SpriteManager::requestSprite({*ViewPort::basicProgram,&sprite},move->getRect(),1,move->getTilt());
     }
 }
 
@@ -398,7 +458,7 @@ void EntityAnimationComponent::update()
 
         PlayerHealthComponent* health = entity->getComponent<PlayerHealthComponent>();
 
-        BaseAnimationComponent::request(*Game::GameShaders.SpriteProgram,{rect->getRect(),StarSystem::getZGivenLayer(rect->getLayer())},
+        BaseAnimationComponent::request(*Game::GameShaders.SpriteProgram,rect->getRect(),StarSystem::getZGivenLayer(rect->getLayer()),
                                         BaseAnimation::getFrameFromStart(start,anime),
                                         rect->getTiltOnPlanet(),
                                         rect->getFacing() == FORWARD ? NONE : MIRROR,//if we are facing backwards, mirror the sprite (this means all sprites by default need to be facing to the right
@@ -407,7 +467,7 @@ void EntityAnimationComponent::update()
     }
     else if (BasicMoveComponent* rect = entity->getComponent<BasicMoveComponent>())
     {
-     BaseAnimationComponent::request(*Game::GameShaders.SpriteProgram,{rect->getRect(),zCoord},
+     BaseAnimationComponent::request(*Game::GameShaders.SpriteProgram,rect->getRect(),zCoord,
                                         BaseAnimation::getFrameFromStart(start,anime),
                                         rect->getTilt(),
                                         NONE,

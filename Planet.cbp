@@ -73,6 +73,8 @@
 		<Unit filename="AI.h" />
 		<Unit filename="critter.cpp" />
 		<Unit filename="critter.h" />
+		<Unit filename="debug.cpp" />
+		<Unit filename="debug.h" />
 		<Unit filename="enemy.cpp" />
 		<Unit filename="enemy.h" />
 		<Unit filename="entity.cpp" />
@@ -93,10 +95,8 @@
 		<Unit filename="projectile.h" />
 		<Unit filename="shaders.cpp" />
 		<Unit filename="shaders.h" />
-		<Unit filename="shaders/backgroundShader.h" />
 		<Unit filename="shaders/distanceFragmentShader.h" />
-		<Unit filename="shaders/dottedFragment.h" />
-		<Unit filename="shaders/dottedVertex.h" />
+		<Unit filename="shaders/distanceVertexShader.h" />
 		<Unit filename="shaders/gravityFragmentShader.h" />
 		<Unit filename="shaders/gravityVertexShader.h" />
 		<Unit filename="shaders/hurtShader.h" />

@@ -37,14 +37,19 @@ public:
           *
           *   \param func: A "Callable", which is anything with a () operator. T = (std::shared_ptr<Planet>&) -> void or bool
           *   \param layer: The layer you want, with 0 being closest to the outer edge of the solar system. -1 if you wish to run on all planets.
-          *   \return An int
+          *   \return void
           *
           **/
         int i = 0;
         bool layerOutOfRange = layer < 0 || layer >= layers.size(); //whether "layer" is out of range
-        auto start = layerOutOfRange ? 0 : layers[layer]; //if out of range, start at the beginning, otherwise start at the right layer
-        auto end = layerOutOfRange || layer == layers.size() - 1 ? planets.size() : layers[layer + 1]; //if out of range or the chosen layer is the last one, go to the end, otherwise go up to the next layer
-        for (auto it = start; it != end; ++it)
+        PlanetIndex start = layerOutOfRange ? 0 : layers[layer]; //if out of range, start at the beginning, otherwise start at the right layer
+        PlanetIndex end = static_cast<PlanetIndex>(layerOutOfRange || layer == layers.size() - 1 ? planets.size() : layers[layer + 1]); //if out of range or the chosen layer is the last one, go to the end, otherwise go up to the next layer
+
+
+          doForEachElement(start,end,[this,&func](PlanetIndex it){
+             return func(planets[it]);
+             });
+        /*for (auto it = start; it != end; ++it)
         {
             if constexpr (!std::is_same<decltype(func(std::declval<std::shared_ptr<Planet>&>())),bool>::value) //if the function doesn't return a bool, keep going until we've processed every planet
             {
@@ -58,7 +63,7 @@ public:
                     return;
                 }
             }
-        }
+        }*/
     }
     template<typename T, typename I>
     I foldLeftPlanets(T func, I initial) //

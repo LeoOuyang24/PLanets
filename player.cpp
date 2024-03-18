@@ -18,6 +18,7 @@ float PlayerForcesComponent::getFriction()
 void PlayerForcesComponent::update()
 {
     //Force oldForce =
+
     if (entity)
     if (PlayerMoveComponent* move = entity->getComponent<PlayerMoveComponent>())
     if (move->getLatchedTo())
@@ -44,22 +45,24 @@ bool PlayerControlsComponent::getMovedLastFrame()
 
 void PlayerControlsComponent::update()
 {
+    if (entity)
+    {
     PlayerMoveComponent* move = entity->getComponent<PlayerMoveComponent>();
     PlayerForcesComponent* forces = entity->getComponent<PlayerForcesComponent>();
     glm::vec2 mousePos = ViewPort::toWorld(pairtoVec(MouseManager::getMousePos()));
-    PolyRender::requestCircle({1,0,0,1},mousePos,10,1,Game::getSolar().getZGivenLayer(move->getLayer()));
+    //PolyRender::requestCircle({1,0,0,1},mousePos,10,1,Game::getSolar().getZGivenLayer(move->getLayer()));
     if (move)
     {
         if (MouseManager::getJustClicked() == SDL_BUTTON_LEFT)
         {
-            Entity* bullet =new Entity();
+            /*Entity* bullet =new Entity();
             bullet->addComponent(*(new RectRenderComponent(*bullet,{1,1,1,1})));
             bullet->addComponent(*(new GravityForcesComponent(*bullet)));
             bullet->addComponent(*(new RectComponent(glm::vec4(0,0,10,10),*bullet)));
             bullet->addComponent(*(new ProjectileDeathComponent(*bullet)));
             glm::vec2 shootForce = 5.0f*betterNormalize(mousePos - move->getCenter());
             bullet->getComponent<GravityForcesComponent>()->addForce(shootForce);
-            Game::getManager().addEntity(*bullet,move->getCenter().x,move->getCenter().y);
+            Game::getManager().addEntity(*bullet,move->getCenter().x,move->getCenter().y);*/
         }
         else if (forces)
         {
@@ -105,27 +108,21 @@ void PlayerControlsComponent::update()
         {
             //std::cout << "VEL: " << move->getVelocity() << "\n";
             bool moveLeftOrRight = (AIsPressed || DIsPressed);
-            if (move->getLatchedTo())
+
+            if (moveLeftOrRight)
             {
-                //move->accel(move->getFacing() == FORWARD);
+                move->setSpeed(PlayerMoveComponent::PLAYER_SPEED);
+                move->accel(DIsPressed); //move clockwise if D is pressed, otherwise move counter clockwise //sprint if sprinting
+                if (EntityAnimationComponent* comp = entity->getComponent<EntityAnimationComponent>())
+                {
+                    comp->setAnimation({{0,0,1,0.5},8,1,16});
+                }
             }
             else
             {
-                if (moveLeftOrRight)
+                if (EntityAnimationComponent* comp = entity->getComponent<EntityAnimationComponent>())
                 {
-                    move->setSpeed(KeyManager::isPressed(SDLK_LCTRL) ? PlayerMoveComponent::PLAYER_SPRINT_SPEED : PlayerMoveComponent::PLAYER_SPEED);
-                    move->accel(DIsPressed); //move clockwise if D is pressed, otherwise move counter clockwise //sprint if sprinting
-                    if (EntityAnimationComponent* comp = entity->getComponent<EntityAnimationComponent>())
-                    {
-                        comp->setAnimation({{0,0,1,0.5},8,1,16});
-                    }
-                }
-                else
-                {
-                    if (EntityAnimationComponent* comp = entity->getComponent<EntityAnimationComponent>())
-                    {
-                        comp->setAnimation({{0,0,.125,0.5}});
-                    }
+                    comp->setAnimation({{0,0,.125,0.5}});
                 }
             }
 
@@ -135,14 +132,14 @@ void PlayerControlsComponent::update()
                 if (forces && move->getOnGround())
                 {
                     glm::vec2 jumpVec = glm::normalize(move->getCenter() - move->getStandingOn()->center);
-                    if ((moveLeftOrRight))
+                    if ((moveLeftOrRight) && KeyManager::isPressed(SDLK_LCTRL))
                     {
                         glm::vec2 forwardVec = (1.0f - 2*move->getFacing())*glm::vec2(-jumpVec.y,jumpVec.x); //calculate horizontal vector, multiply by -1 if moving clockwise
                         //forwardVec = {-cos(move->getTilt()), -sin(move->getTilt())};
-                        //jumpVec = jumpVec + (move->getMovedAmount()/move->getBaseSpeed())*forwardVec;
+                        jumpVec = 0.5f*jumpVec + forwardVec;
                     }
                     //std::cout << "JUMP: " << glm::length(0.75f*jumpVec) << "\n";
-                    forces->addForce(0.75f*jumpVec,JUMP); //+ .5f*moveAmount*glm::normalize(glm::vec2(planetToPlayerVec.y,-planetToPlayerVec.x)));
+                    forces->addForce(20.0f*jumpVec,JUMP); //+ .5f*moveAmount*glm::normalize(glm::vec2(planetToPlayerVec.y,-planetToPlayerVec.x)));
                      //   std::cout << glm::length(0.75f*jumpVec) << " " << glm::length(forces->getForce(JUMP))<< "\n";
 
                     //onGround = false;
@@ -154,7 +151,7 @@ void PlayerControlsComponent::update()
                 {
                     float tilt = atan2(mousePos.y - move->getCenter().y, mousePos.x - move->getCenter().x);
                     move->setTilt(tilt);
-                    forces->addForce(0.1f*ForceVector(cos(tilt),sin(tilt)), JUMP);
+                    forces->addForce(1.0f*ForceVector(cos(tilt),sin(tilt)), JUMP);
                     fuel = std::max(0,fuel - 1);
                 }
             }
@@ -162,14 +159,23 @@ void PlayerControlsComponent::update()
             {
                 fuel = std::min(MAX_FUEL,fuel + 1);
             }
+            if (KeyManager::getJustPressed() == SDLK_LCTRL && move->getOnGround())
+            {
+                forces->applyFrictionAll(1.3f);
+            }
         }
 
         //move->moveCenter(move->moveOnCircle(move->getSpeed()));
 
-        PolyRender::requestLine(glm::vec4(move->getCenter(),mousePos),glm::vec4(1,0,0,1),1,1);
-        PolyRender::requestCircle(glm::vec4(1,0,0,1),mousePos,10,false,1);
+        //PolyRender::requestLine(glm::vec4(move->getCenter(),mousePos),glm::vec4(1,0,0,1),Game::getCurrentZ(),1);
+        PolyRender::requestCircle(glm::vec4(1,0,0,1),mousePos,10,false,Game::getCurrentZ());
+        if (move && move->getStandingOn())
+        {
+            PolyRender::requestLine(glm::vec4(move->getCenter(),move->getStandingOn()->center),{1,0,0,1},Game::getCurrentZ());
+        }
 
         //setMovedLastFrame(moveLeftOrRight);
+    }
     }
 }
 
@@ -189,6 +195,11 @@ void PlayerMoveComponent::setLatchedTo(const std::shared_ptr<Planet>& planet)
             latchedVelocity = getVelocity();
         }
     }
+}
+
+DeltaTime& PlayerMoveComponent::getWarping()
+{
+    return warping;
 }
 
 Planet* PlayerMoveComponent::getLatchedTo()
@@ -306,7 +317,7 @@ void PlayerAnimationComponent::update()
     if (BaseHealthComponent* health = entity->getComponent<BaseHealthComponent>())
     if (forces->getWeightless())
     {
-        BaseAnimationComponent::request(weightlessOutline,{rect->getRect(),StarSystem::getPlanetZGivenLayer(rect->getLayer())},
+        BaseAnimationComponent::request(weightlessOutline,rect->getRect(),StarSystem::getPlanetZGivenLayer(rect->getLayer()),
                                         BaseAnimation::getFrameFromStart(start,anime),
                                         rect->getTiltOnPlanet(),
                                         rect->getFacing() == FORWARD ? NONE : MIRROR,//if we are facing backwards, mirror the sprite (this means all sprites by default need to be facing to the right
@@ -324,11 +335,12 @@ void PlayerAnimationComponent::update()
 Entity* Player::createPlayer(StarSystem& system)
 {
     Entity* player = new Entity();
-    player->addComponent(*(new PlayerControlsComponent(*player)));
-    player->addComponent(*(new PlayerMoveComponent(*player)));
     //player->addComponent(*(new MoveOnPlanetComponent(*system.getPlanet(0),{20,30},1,*player)));
     player->addComponent(*(new PlayerForcesComponent(*player)));
     player->addComponent(*(new PlayerHealthComponent(*player)));
+        player->addComponent(*(new PlayerControlsComponent(*player)));
+    player->addComponent(*(new PlayerMoveComponent(*player)));
+
     //player->addComponent(*(new RectRenderComponent(*player,glm::vec4(1,0,0,1))));
     Sprite* sprite = new Sprite("sprites/guy.png");
     //BaseAnimation anime = {2,8,1, {0,0,1,1}};

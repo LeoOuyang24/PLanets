@@ -20,15 +20,17 @@ glm::vec2 Planet::getPlanetSurfacePoint(float tilt, const glm::vec4& rect)
 
 void Planet::render()
 {
-    SpriteManager::request(PlanetSpriteManager::PlanetSprites.getSprite(sprite),*PlanetSpriteManager::PlanetShader,{glm::vec4(center - glm::vec2(radius,radius),radius*2,radius*2),
-                           StarSystem::getPlanetZGivenLayer(layer)});
+    ZType z = StarSystem::getPlanetZGivenLayer(layer);
+    if (!KeyManager::isPressed(SDLK_BACKQUOTE))
+    SpriteManager::requestSprite({*PlanetSpriteManager::PlanetShader,&PlanetSpriteManager::PlanetSprites.getSprite(sprite)},glm::vec4(center - glm::vec2(radius,radius),radius*2,radius*2),z);
+};
     //PolyRender::requestCircle({0,1,1,1},center,getGravityRadius(),false,PLANET_Z + z);
    //PolyRender::requestNGon(10,center,radius,{1,1,1,1},0,true,1,1);
-}
 
 void Planet::renderGravityField()
 {
-    PlanetSpriteManager::GravityFieldRender->draw(GL_TRIANGLES,glm::vec3(center,StarSystem::getPlanetZGivenLayer(layer)),getGravityRadius(),CENTER_GRAVITY_COLOR,EDGE_GRAVITY_COLOR);
+    ZType z = StarSystem::getPlanetZGivenLayer(layer) - 1;
+    SpriteManager::request({*PlanetSpriteManager::GravityFieldRender},z,true,glm::vec3(center,z),getGravityRadius(),CENTER_GRAVITY_COLOR,EDGE_GRAVITY_COLOR);
 }
 
 float Planet::getGravityRadius()
@@ -63,8 +65,8 @@ void PlanetSpriteManager::init()
 
     GravityFieldRender = std::make_unique<BasicRenderPipeline>("./shaders/gravityVertexShader.h","./shaders/gravityFragmentShader.h");
     PlanetShader = std::make_unique<RenderProgram>("./shaders/distanceVertexShader.h","./shaders/distanceFragmentShader.h");
-    PlanetShader->use();
-    glUniform1i(0,GAME_Z);
+    glUseProgram(PlanetShader->getProgram());
+    glUniform1i(glGetUniformLocation(PlanetShader->getProgram(),"gameZ"),GAME_Z);
 }
 
 Sprite& PlanetSpriteManager::getSprite(SpritePath src)

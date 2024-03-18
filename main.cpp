@@ -51,6 +51,8 @@ int main(int args, char* argsc[])
     bool eventsEmpty = true;
         //std::cout << tree.count() << std::endl;
 
+    Sprite bunny("sprites/bunny.png");
+
     PlanetSprites.init();
     Game::init();
 
@@ -92,12 +94,12 @@ int main(int args, char* argsc[])
     solarian->addComponent(*(new SolarianRenderComponent(*solarian)));*/
     //BaseAnimationComponent comp(rabbit,anime);
 
-    /*Sprite rocket("sprites/rocket.png");
+    Sprite rocket("sprites/teleporter.png");
     Entity* launchpad = new Entity();
-    launchpad->addComponent(*(new MoveOnPlanetComponent(*Game::getSolar().getPlanet(0),{50,50},{},*launchpad)));
+    launchpad->addComponent(*(new MoveOnPlanetComponent(*Game::getSolar().getPlanet(0),{50,30},{},*launchpad)));
     launchpad->addComponent(*(new EntityAnimationComponent(*launchpad,rocket)));
     Planet* lastPlanet = Game::getSolar().getPlanet(Game::getSolar().size() - 1);
-    launchpad->addComponent(*(new LaunchComponent(3,0,*launchpad)));*/
+    launchpad->addComponent(*(new LaunchComponent(3,0,*launchpad)));
 
 
     //Game::getManager().addEntity(*rabbit);
@@ -110,7 +112,6 @@ int main(int args, char* argsc[])
     RenderCamera camera;
     ViewPort::setZRange((CAMERA_Z - GAME_Z)/2,CAMERA_Z);
     camera.init({0,0,CAMERA_Z});
-    Sprite bunny("sprites/bunny.png");
 
 
     ViewPort::currentCamera = &camera;
@@ -134,13 +135,13 @@ int main(int args, char* argsc[])
     //BasicRenderPipeline stars("./shaders/gravityVertexShader.h","./shaders/starShader.h");
     //stars.init("./shaders/gravityVertexShader.h","./shaders/starShader.h");
 
+
     //stars.init();
 
     //RenderProgram balls("./shaders/distanceVertexShader.h","./shaders/distanceFragmentShader.h");
 
-    glDisable(GL_DEPTH_TEST);
+    //glDisable(GL_DEPTH_TEST);
 
-//    LaunchComponent::FlyingDebris.init();
 
     while (!quit)
     {
@@ -160,31 +161,26 @@ int main(int args, char* argsc[])
             MouseManager::update(e);
         }
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        //glDepthMask(false);
-       //backgroundProgram.draw(GL_TRIANGLES,camera.getCenter());
         MoveOnPlanetComponent* moveOnPlanet = Game::getPlayer().getComponent<MoveOnPlanetComponent>();
-        camera.setPos(glm::vec3(moveOnPlanet->getCenter(),CAMERA_Z - GAME_Z + StarSystem::getPlanetZGivenLayer(moveOnPlanet->getLayer())));
+        if (moveOnPlanet)
+        {
+            camera.setPos(glm::vec3(moveOnPlanet->getCenter(),CAMERA_Z - GAME_Z + StarSystem::getPlanetZGivenLayer(moveOnPlanet->getLayer())));
+        }
+        SpriteManager::request({stars},camera.getPos().z + FAR_Z - CAMERA_Z +1,true,glm::vec3(500,500,camera.getPos().z + FAR_Z - CAMERA_Z +1),500.0f,glm::vec4(1,1,1,1),glm::vec4(0,1,1,0));
+        SpriteManager::request({starLight},FAR_Z,true,glm::vec3(500,500,FAR_Z),1000.0f,glm::vec4(1,1,1,1),glm::vec4(0,1,1,0));
 
         Game::update();
 
-        //apple.update();
-        //solar.update();
-        //PolyRender::requestRect({0,0,100,100},{1,0,0,1},true,0,1);
-        //SpriteManager::request(background,ViewPort::basicProgram,{{0,0,1000,1000},FAR_Z});
-        //
-
-        stars.draw(GL_TRIANGLES,glm::vec3(500,500,camera.getPos().z + FAR_Z - CAMERA_Z +1),500.0f,glm::vec4(1,1,1,1),glm::vec4(0,1,1,0));
-        starLight.draw(GL_TRIANGLES,glm::vec3(500,500,FAR_Z),1000.0f,glm::vec4(1,1,1,1),glm::vec4(0,1,1,0));
-
         ViewPort::update();
         SequenceManager::run();
-        SpriteManager::render();
         PolyRender::render();
+
+        SpriteManager::render();
         //Font::tnr.write(Font::wordProgram,convert(DeltaTime::deltaTime),0,320,0,1,{0,0,0});
         GLContext::update();
         eventsEmpty = true;
         DeltaTime::update();
+        //std::cout << DeltaTime::deltaTime << "\n";
         SDL_Delay(std::max(0,10 - DeltaTime::deltaTime));
 
     }

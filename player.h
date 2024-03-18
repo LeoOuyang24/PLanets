@@ -30,18 +30,21 @@ protected:
 
 class PlayerMoveComponent : public MoveOnPlanetComponent, public ComponentContainer<PlayerMoveComponent>
 {
+    DeltaTime warping; //time left before we warp. Unset if not warping at all
     float latchedVelocity = 0; //velocity when we latched onto a planet
     std::weak_ptr<Planet> latchedTo;
 public:
     static constexpr int PLAYER_DIMEN = 10;
-    static constexpr float PLAYER_SPEED = 1.0f;
-    static constexpr float PLAYER_SPRINT_SPEED = 2.0f;
-    static constexpr float PLAYER_ACCEL = 0.1f; //amount to increase in speed by every frame
-    static constexpr float PLAYER_DECEL = 0.9f; //%of speed remaining after decelerating
-    static constexpr float PLAYER_IN_AIR_ACCEL = 0.01f; //acceleration if we are in the air
+    static constexpr float PLAYER_SPEED = 10.0f;
+    static constexpr float PLAYER_SPRINT_SPEED = 20.0f;
+    static constexpr float PLAYER_ACCEL = 1; //amount to increase in speed by every frame
+    static constexpr float PLAYER_DECEL = 9; //%of speed remaining after decelerating
+    static constexpr float PLAYER_IN_AIR_ACCEL = 0.5f; //acceleration if we are in the air
+    static constexpr int PLAYER_WARP_TIME = 20; //seconds of warping animation
     PlayerMoveComponent(Entity& player);
     void setStandingOn(Planet* planet);
     void setLatchedTo(const std::shared_ptr<Planet>& planet);
+    DeltaTime & getWarping();
     Planet* getLatchedTo();
     void update();
 };

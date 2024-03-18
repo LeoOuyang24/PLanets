@@ -34,8 +34,8 @@ void main()
     }*/
     if (ratio > 1) //if beyond the radius
     {
-        //discard;
-        FragColor = vec4(0);
+        discard;
+        //FragColor = vec4(0);
     }
     else
     {

@@ -104,7 +104,7 @@ LaunchComponent::LaunchComponent(PlanetIndex planet, const glm::vec2& destinatio
                                                                                                 destinationPlanet(planet),
                                                                                                 destinationPoint(destination)
 {
-    launchSequence.setup(*(new SequenceUnit(1,0,true,[&entity,this](int time){
+    /*launchSequence.setup(*(new SequenceUnit(1,0,true,[&entity,this](int time){
                                             if (MoveOnPlanetComponent* move = entity.getComponent<MoveOnPlanetComponent>())
                                             {
                                                 if (RenderCamera* camera = ViewPort::currentCamera)
@@ -146,7 +146,7 @@ LaunchComponent::LaunchComponent(PlanetIndex planet, const glm::vec2& destinatio
                                     }
                                 }
                                 return false;
-                              })));
+                              })));*/
 }
 
 LaunchComponent::LaunchComponent(PlanetIndex planet, float angle, Entity& entity) : LaunchComponent(planet,
@@ -163,9 +163,15 @@ void LaunchComponent::collide(Entity& other)
         Planet* planet = Game::getSolar().getPlanet(destinationPlanet);
         if (planet)
         {
-            //move->setLayer(planet->layer);
-            //move->setStandingOn(planet);
-            SequenceManager::request(launchSequence);
+            DeltaTime& warping = move->getWarping();
+            if (!warping.isSet())
+            {
+                warping.set();
+            }
+            else if (warping.getFramesPassed() == PlayerMoveComponent::PLAYER_WARP_TIME)
+            {
+                move->teleportToPlanet(*planet);
+            }
         }
 
     }

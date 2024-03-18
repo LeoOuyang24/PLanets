@@ -48,11 +48,13 @@ public:
     MoveOnPlanetComponent(Planet& planet, const glm::vec2& dimen, const MovePhysicsConstants& constants, Entity& entity);
 
     virtual void setStandingOn(Planet* planet);
+    void teleportToPlanet(Planet& planet); //same as setStandingOn except we also move our position
     void setFacing(Facing dir);
     void setSpeed(float speed);
     void setLayer(int newLayer);
 
     Planet* getStandingOn();
+    Planet* getPrevStandingOn();
     float getSpeed();
     float getVelocity();
     void setVelocity(float vel);
@@ -77,6 +79,7 @@ private:
     MovePhysicsConstants constants;
     bool onGround= true;
     Planet* standingOn = 0;
+    Planet* prevStandingOn = 0; //previous planet we were standing on, sometimes useful
     glm::vec2 lastCenter = {0,0}; //center of our last frame
     Facing facing = FORWARD;
     int layer = 0; //the layer we are currently on.
@@ -86,7 +89,7 @@ private:
 
 enum ForceSource //possible sources of a force
 {
-    SELF,
+    SELF = 0,
     JUMP,
     GRAVITY, //force from gravitational pull
     MISC     //pretty much anything else
@@ -102,11 +105,13 @@ protected:
     std::unordered_map<ForceSource,Force> forces;
 public:
     constexpr static float GROUND_FRICTION = 0.8f;
+    constexpr static float MAX_FORCE_MAG = 30;//maximum magnitude of a force
     GravityForcesComponent(Entity& player);
     void addForce(const glm::vec2& force, ForceSource source = MISC); //adds "force" to the force in "forces". If the source has not been added yet, create it
     void setForce(const glm::vec2& force, ForceSource source = MISC);
     void applyFriction(float friction, ForceSource source = MISC);
     void applyFrictionAll(float friction); //apply friction to ALL forces
+    const std::unordered_map<ForceSource,Force>& getAllForces();
     Force getForce(ForceSource source = MISC); //get the force from the corresponding force, or {0,0} if non existent
     Force getTotalForce(); //accumulates all our forces
     void update();
