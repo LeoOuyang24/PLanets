@@ -30,7 +30,6 @@ protected:
 
 class PlayerMoveComponent : public MoveOnPlanetComponent, public ComponentContainer<PlayerMoveComponent>
 {
-    DeltaTime warping; //time left before we warp. Unset if not warping at all
     float latchedVelocity = 0; //velocity when we latched onto a planet
     std::weak_ptr<Planet> latchedTo;
 public:
@@ -40,11 +39,10 @@ public:
     static constexpr float PLAYER_ACCEL = 1; //amount to increase in speed by every frame
     static constexpr float PLAYER_DECEL = 9; //%of speed remaining after decelerating
     static constexpr float PLAYER_IN_AIR_ACCEL = 0.5f; //acceleration if we are in the air
-    static constexpr int PLAYER_WARP_TIME = 20; //seconds of warping animation
     PlayerMoveComponent(Entity& player);
     void setStandingOn(Planet* planet);
+    virtual void setLayer(int newLayer_);
     void setLatchedTo(const std::shared_ptr<Planet>& planet);
-    DeltaTime & getWarping();
     Planet* getLatchedTo();
     void update();
 };
@@ -60,9 +58,10 @@ public:
     bool getFallingBack();
 };
 
-class PlayerAnimationComponent : public EntityAnimationComponent
+class PlayerAnimationComponent : public EntityAnimationComponent, public ComponentContainer<PlayerAnimationComponent>
 {
    RenderProgram weightlessOutline;
+   RenderProgram teleportProgram; //allows us to render a white color if teleporting
 public:
     PlayerAnimationComponent(Entity& entity, Sprite& sprite);
     void update();

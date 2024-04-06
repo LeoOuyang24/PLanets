@@ -52,7 +52,7 @@ void StarSystem::init()
         int offset = planets.size(); //number of planets not counting this layer
         for (int j = 0; j < layerSize; ++j)
         {
-            insertPlanet(generatePlanet({(j + 1)*(Planet::MAX_RADIUS + MIN_PLANETS_SPACE),(j + 1)*(Planet::MAX_RADIUS + MIN_PLANETS_SPACE)}),i);
+            insertPlanet(generatePlanet({(layerSize - (j + 1))*(Planet::MAX_RADIUS + MIN_PLANETS_SPACE),(j + 1)*(Planet::MAX_RADIUS + MIN_PLANETS_SPACE)}),i);
         }
     }
 }
@@ -60,11 +60,6 @@ void StarSystem::init()
 
 void StarSystem::update()
 {
-    /*
-    for (PlanetIndex it = 0; it < planets.size(); ++it)
-    {
-        (planets[it])->render();
-    }*/
     processPlanets([](PlanetPtr& planet){
                    int playerLayer = Game::getPlayer().getComponent<MoveOnPlanetComponent>()->getLayer();
                    planet->render();
@@ -158,21 +153,10 @@ LaunchComponent::LaunchComponent(PlanetIndex planet, float angle, Entity& entity
 
 void LaunchComponent::collide(Entity& other)
 {
-    if (auto move = other.getComponent<PlayerMoveComponent>())
+    if (auto warping = other.getComponent<WarpingComponent>())
+    if (!warping->isWarping())
     {
-        Planet* planet = Game::getSolar().getPlanet(destinationPlanet);
-        if (planet)
-        {
-            DeltaTime& warping = move->getWarping();
-            if (!warping.isSet())
-            {
-                warping.set();
-            }
-            else if (warping.getFramesPassed() == PlayerMoveComponent::PLAYER_WARP_TIME)
-            {
-                move->teleportToPlanet(*planet);
-            }
-        }
+        warping->setWarping(destinationPlanet);
 
     }
 }

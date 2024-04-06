@@ -95,7 +95,7 @@ int main(int args, char* argsc[])
     //BaseAnimationComponent comp(rabbit,anime);
 
     Sprite rocket("sprites/teleporter.png");
-    Entity* launchpad = new Entity();
+    std::shared_ptr<Entity> launchpad = std::shared_ptr<Entity>((new Entity()));
     launchpad->addComponent(*(new MoveOnPlanetComponent(*Game::getSolar().getPlanet(0),{50,30},{},*launchpad)));
     launchpad->addComponent(*(new EntityAnimationComponent(*launchpad,rocket)));
     Planet* lastPlanet = Game::getSolar().getPlanet(Game::getSolar().size() - 1);
@@ -105,7 +105,9 @@ int main(int args, char* argsc[])
     //Game::getManager().addEntity(*rabbit);
     //Game::getManager().addEntity(*solarian);
     //Game::getManager().addEntity(*spitter);
-    //Game::getManager().addEntity(*launchpad);
+    Game::getManager().addMasterListEntry(launchpad);
+
+    Game::getManager().addEntitiesFromLayer(0);
 
     Sprite background;
     background.init("sprites/blueplanet.png");
@@ -164,7 +166,9 @@ int main(int args, char* argsc[])
         MoveOnPlanetComponent* moveOnPlanet = Game::getPlayer().getComponent<MoveOnPlanetComponent>();
         if (moveOnPlanet)
         {
-            camera.setPos(glm::vec3(moveOnPlanet->getCenter(),CAMERA_Z - GAME_Z + StarSystem::getPlanetZGivenLayer(moveOnPlanet->getLayer())));
+            glm::vec3 targetPoint = glm::vec3(moveOnPlanet->getCenter(),CAMERA_Z - GAME_Z + StarSystem::getPlanetZGivenLayer(moveOnPlanet->getLayer()));
+            camera.addVector(std::min(glm::length(targetPoint - camera.getPos()),0.005f*DeltaTime::deltaTime)*(targetPoint - camera.getPos()));
+            //camera.setPos(targetPoint);
         }
         SpriteManager::request({stars},camera.getPos().z + FAR_Z - CAMERA_Z +1,true,glm::vec3(500,500,camera.getPos().z + FAR_Z - CAMERA_Z +1),500.0f,glm::vec4(1,1,1,1),glm::vec4(0,1,1,0));
         SpriteManager::request({starLight},FAR_Z,true,glm::vec3(500,500,FAR_Z),1000.0f,glm::vec4(1,1,1,1),glm::vec4(0,1,1,0));

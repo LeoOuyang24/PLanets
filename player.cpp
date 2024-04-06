@@ -96,14 +96,7 @@ void PlayerControlsComponent::update()
         PlayerHealthComponent* health = entity->getComponent<PlayerHealthComponent>();
         bool AIsPressed = KeyManager::isPressed(SDLK_a);
         bool DIsPressed = KeyManager::isPressed(SDLK_d);
-        if (KeyManager::getJustPressed() == SDLK_d)
-        {
-            move->setFacing(FORWARD);
-        }
-        else if (KeyManager::getJustPressed() == SDLK_a)
-        {
-            move->setFacing(BACKWARD);
-        }
+
         if (!health->getFallingBack())
         {
             //std::cout << "VEL: " << move->getVelocity() << "\n";
@@ -136,10 +129,10 @@ void PlayerControlsComponent::update()
                     {
                         glm::vec2 forwardVec = (1.0f - 2*move->getFacing())*glm::vec2(-jumpVec.y,jumpVec.x); //calculate horizontal vector, multiply by -1 if moving clockwise
                         //forwardVec = {-cos(move->getTilt()), -sin(move->getTilt())};
-                        jumpVec = 0.5f*jumpVec + forwardVec;
+                        jumpVec = 0.01f*jumpVec + forwardVec;
                     }
                     //std::cout << "JUMP: " << glm::length(0.75f*jumpVec) << "\n";
-                    forces->addForce(20.0f*jumpVec,JUMP); //+ .5f*moveAmount*glm::normalize(glm::vec2(planetToPlayerVec.y,-planetToPlayerVec.x)));
+                    forces->addForce(15.0f*jumpVec,JUMP); //+ .5f*moveAmount*glm::normalize(glm::vec2(planetToPlayerVec.y,-planetToPlayerVec.x)));
                      //   std::cout << glm::length(0.75f*jumpVec) << " " << glm::length(forces->getForce(JUMP))<< "\n";
 
                     //onGround = false;
@@ -192,15 +185,11 @@ void PlayerMoveComponent::setLatchedTo(const std::shared_ptr<Planet>& planet)
         if (planet.get())
         {
             setStandingOn(planet.get());
-            latchedVelocity = getVelocity();
+            latchedVelocity = absMax(getVelocity(),convertTo1(getVelocity())*1.0f);
         }
     }
 }
 
-DeltaTime& PlayerMoveComponent::getWarping()
-{
-    return warping;
-}
 
 Planet* PlayerMoveComponent::getLatchedTo()
 {
@@ -220,6 +209,17 @@ void PlayerMoveComponent::setStandingOn(Planet* planet)
     }
 }
 
+void PlayerMoveComponent::setLayer(int newLayer_)
+{
+
+    if (&Game::getPlayer() == entity && newLayer_ != getLayer())
+    {
+        Game::updateLayer(newLayer_);
+    }
+
+    MoveOnPlanetComponent::setLayer(newLayer_);
+
+}
 
 void PlayerMoveComponent::update()
 {
@@ -299,12 +299,22 @@ bool PlayerHealthComponent::getFallingBack()
 
 
 PlayerAnimationComponent::PlayerAnimationComponent(Entity& entity, Sprite& sprite) : EntityAnimationComponent(entity, sprite),
+                                                                                     ComponentContainer<PlayerAnimationComponent>(entity),
                                                                                      weightlessOutline({
                                                                                                        {
                                                                                                        templateShader(readFile("./shaders/spriteShader.h").first,true,{"vec4 shade"},{"vec4 tint"},{"tint = shade"})
                                                                                                        ,GL_VERTEX_SHADER,false
                                                                                                        },
-                                                                                                       LoadShaderInfo{"shaders/paintShader.h",GL_FRAGMENT_SHADER}})
+                                                                                                       LoadShaderInfo{"shaders/paintShader.h",GL_FRAGMENT_SHADER}}),
+                                                                                    teleportProgram({
+                                                                                                   LoadShaderInfo{
+                                                                                                   templateShader(readFile("./shaders/spriteShader.h").first,true,{"vec4 shade"},{"vec4 tint"},{"tint = shade"})
+                                                                                                   ,GL_VERTEX_SHADER,false
+                                                                                                   },
+                                                                                                   LoadShaderInfo{
+                                                                                                   templateShader(readFile("./shaders/hurtShader.h").first,false,{"vec4 tint"},{},{"fragColor += vec4(tint.xyz,fragColor.a)"})
+                                                                                                   ,GL_FRAGMENT_SHADER,false
+                                                                                                   }})
 {
 
 }
@@ -313,17 +323,31 @@ void PlayerAnimationComponent::update()
 {
     //EntityAnimationComponent::update();
     if (GravityForcesComponent* forces = entity->getComponent<GravityForcesComponent>())
-    if (MoveOnPlanetComponent* rect = entity->getComponent<MoveOnPlanetComponent>())
+    if (PlayerMoveComponent* rect = entity->getComponent<PlayerMoveComponent>())
     if (BaseHealthComponent* health = entity->getComponent<BaseHealthComponent>())
-    if (forces->getWeightless())
     {
-        BaseAnimationComponent::request(weightlessOutline,rect->getRect(),StarSystem::getPlanetZGivenLayer(rect->getLayer()),
-                                        BaseAnimation::getFrameFromStart(start,anime),
-                                        rect->getTiltOnPlanet(),
-                                        rect->getFacing() == FORWARD ? NONE : MIRROR,//if we are facing backwards, mirror the sprite (this means all sprites by default need to be facing to the right
-                                        health && health->isInvuln() ? 1.0f : 0.0f,
-                                        glm::vec4(0,1,0,1)
-                                        );
+            WarpingComponent* warping = entity->getComponent<WarpingComponent>();
+            bool isWarping = warping && warping->isWarping();
+            BasicRenderPipeline& program = forces->getWeightless() ?
+                                                weightlessOutline :
+                                                isWarping ?
+                                                    teleportProgram :
+                                                    (*Game::GameShaders.SpriteProgram);
+            glm::vec4 tint =    isWarping ?
+                                    glm::vec4(1) : // glm::vec4(glm::vec3((PlayerMoveComponent::PLAYER_WARP_TIME - rect->getWarping().getFramesPassed())/PlayerMoveComponent::PLAYER_WARP_TIME),0) :
+                                    forces->getWeightless() ?
+                                        glm::vec4(0,1,0,1) :
+                                        glm::vec4(1,1,1,1);
+
+
+            BaseAnimationComponent::request(program,rect->getRect(),StarSystem::getPlanetZGivenLayer(rect->getLayer()),
+                                            BaseAnimation::getFrameFromStart(start,anime),
+                                            rect->getTiltOnPlanet(),
+                                            rect->getFacing() == FORWARD ? NONE : MIRROR,//if we are facing backwards, mirror the sprite (this means all sprites by default need to be facing to the right
+                                            health && health->isInvuln() ? 1.0f : 0.0f,
+                                            tint
+                                            );
+
     }
     else
     {
@@ -340,7 +364,7 @@ Entity* Player::createPlayer(StarSystem& system)
     player->addComponent(*(new PlayerHealthComponent(*player)));
         player->addComponent(*(new PlayerControlsComponent(*player)));
     player->addComponent(*(new PlayerMoveComponent(*player)));
-
+    player->addComponent(*(new WarpingComponent(*player)));
     //player->addComponent(*(new RectRenderComponent(*player,glm::vec4(1,0,0,1))));
     Sprite* sprite = new Sprite("sprites/guy.png");
     //BaseAnimation anime = {2,8,1, {0,0,1,1}};

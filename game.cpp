@@ -4,6 +4,7 @@
 #include "entity.h"
 #include "player.h"
 
+
 bool GameEntitiesManager::forEachEntity(Entity& it)
 {
     EntityPosManager::forEachEntity(it);
@@ -14,6 +15,56 @@ bool GameEntitiesManager::forEachEntity(Entity& it)
         return true;
     }
     return false;
+}
+
+void GameEntitiesManager::addEntitiesFromLayer(int layer)
+{
+    clear();
+    if (layerToIndex.find(layer) != layerToIndex.end())
+    {
+        auto it = layerToIndex[layer];
+        int hsh = MasterListEntryHasher()(*it);
+        while (it != masterList.end() && hsh == MasterListEntryHasher()(*it))
+        {
+            addEntity(*it);
+            it = std::next(it);
+        }
+    }
+}
+
+void GameEntitiesManager::addMasterListEntry(MasterListEntry& entry)
+{
+    auto it = masterList.insert(entry);
+    int hashbrown = MasterListEntryHasher()(entry);
+    if (layerToIndex.find(hashbrown) == layerToIndex.end())
+    {
+        layerToIndex[hashbrown] = it;
+    }
+
+}
+
+void GameEntitiesManager::addMasterListEntry(MasterListEntry& entry, const glm::vec2& center, int layer)
+{
+    if (MoveOnPlanetComponent* move = entry->getComponent<MoveOnPlanetComponent>())
+    {
+        move->setCenter(center);
+        move->setLayer(layer);
+    }
+    addMasterListEntry(entry);
+
+}
+
+int GameEntitiesManager::size()
+{
+    return entities.size();
+}
+
+void GameEntitiesManager::clear()
+{
+    for (auto it = entities.begin(); it != entities.end();)
+    {
+        it = removeEntity(it->first);
+    }
 }
 
 void Shaders::init()
@@ -58,7 +109,8 @@ void Game::init()
     player.reset(Player::createPlayer(solar));
     fonts.reset(new Fonts);
     Planet* planet = solar.getPlanet(0);
-    manager.addEntity(player,planet->center.x, planet->center.y - planet->radius);
+    manager.addMasterListEntry(player,{planet->center.x, planet->center.y - planet->radius},0);
+    updateLayer(0);
 }
 
 void Game::update()
@@ -97,4 +149,10 @@ ZType Game::getCurrentZ()
        return getSolar().getZGivenLayer(move->getLayer());
    }
    return GAME_Z;
+}
+
+void Game::updateLayer(int layer)
+{
+    manager.addEntitiesFromLayer(layer);
+    manager.addEntity(player);
 }

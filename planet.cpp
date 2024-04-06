@@ -21,7 +21,6 @@ glm::vec2 Planet::getPlanetSurfacePoint(float tilt, const glm::vec4& rect)
 void Planet::render()
 {
     ZType z = StarSystem::getPlanetZGivenLayer(layer);
-    if (!KeyManager::isPressed(SDLK_BACKQUOTE))
     SpriteManager::requestSprite({*PlanetSpriteManager::PlanetShader,&PlanetSpriteManager::PlanetSprites.getSprite(sprite)},glm::vec4(center - glm::vec2(radius,radius),radius*2,radius*2),z);
 };
     //PolyRender::requestCircle({0,1,1,1},center,getGravityRadius(),false,PLANET_Z + z);

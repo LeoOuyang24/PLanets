@@ -51,7 +51,7 @@ public:
     void teleportToPlanet(Planet& planet); //same as setStandingOn except we also move our position
     void setFacing(Facing dir);
     void setSpeed(float speed);
-    void setLayer(int newLayer);
+    virtual void setLayer(int newLayer);
 
     Planet* getStandingOn();
     Planet* getPrevStandingOn();
@@ -106,9 +106,10 @@ protected:
 public:
     constexpr static float GROUND_FRICTION = 0.8f;
     constexpr static float MAX_FORCE_MAG = 30;//maximum magnitude of a force
+    constexpr static float GLOBAL_FORCE_PORTION = 0.1f; //only a portion of our force is used. This allows us to use more "natural" numbers to describe speed (1 is a rather slow velocity now for example)
     GravityForcesComponent(Entity& player);
     void addForce(const glm::vec2& force, ForceSource source = MISC); //adds "force" to the force in "forces". If the source has not been added yet, create it
-    void setForce(const glm::vec2& force, ForceSource source = MISC);
+    void setForce(glm::vec2 force, ForceSource source = MISC);
     void applyFriction(float friction, ForceSource source = MISC);
     void applyFrictionAll(float friction); //apply friction to ALL forces
     const std::unordered_map<ForceSource,Force>& getAllForces();
@@ -183,6 +184,20 @@ class EnemyComponent : public Component, public ComponentContainer<EnemyComponen
 public:
     EnemyComponent(float collideDamage_,Entity& entity);
     virtual void collide(Entity& other);
+};
+
+class WarpingComponent : public Component, public ComponentContainer<WarpingComponent>
+{
+    DeltaTime timeToWarp; //time till we warp
+    PlanetIndex warpTo; //planet to warp to
+public:
+    static constexpr int WARP_TIME = 200; //milliseconds of warping animation
+    WarpingComponent(Entity& entity);
+    void setWarping(PlanetIndex target);
+    bool isWarping();
+    void update();
+
+
 };
 
 #endif // ENTITY_H_INCLUDED
